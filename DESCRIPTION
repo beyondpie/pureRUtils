@@ -1,0 +1,13 @@
+Package: pureRUtils
+Title: Commonly used R functions with pure R codes
+Version: 0.0.0.9000
+Authors@R: 
+    person("Songpeng", "Zu", , "panshi.pie@gmail.com", role = c("aut", "cre"))
+Description: Summarize my commonly used R functions with pure R codes and high-quality third packages.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
