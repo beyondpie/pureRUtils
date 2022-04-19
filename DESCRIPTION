@@ -18,3 +18,5 @@ Imports:
     ggplot2,
     Seurat,
     plyr
+Depends:
+    R (>= 3.5.0)
