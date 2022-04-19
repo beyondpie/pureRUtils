@@ -2,4 +2,7 @@
 
 export(checkArgsExistOrStop)
 export(cleanOutfile)
+export(integrateWithScRNASeq)
 export(loadRData)
+import(Seurat)
+import(ggplot2)

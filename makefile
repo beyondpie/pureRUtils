@@ -10,7 +10,7 @@ README.md: README.Rmd
 	Rscript -e "devtools::build_readme()"
 
 doc: $(RCODES)
-	Rscript -e "roxygen2::roxygenize(pkg = '.')"
+	Rscript -e "roxygen2::roxygenize()"
 
 check:
 	Rscript -e "devtools::check()"
