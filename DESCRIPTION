@@ -16,4 +16,5 @@ Imports:
     data.table,
     Matrix,
     ggplot2,
-    Seurat
+    Seurat,
+    plyr
