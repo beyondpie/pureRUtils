@@ -2,6 +2,7 @@
 
 export(checkArgsExistOrStop)
 export(cleanOutfile)
+export(getOverlapMatrix)
 export(integrateWithScRNASeq)
 export(loadRData)
 import(Seurat)

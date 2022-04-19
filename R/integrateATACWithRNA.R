@@ -12,8 +12,9 @@
 #' @param rnaTypeColnm characters, colname for rnaSeurat's type, default "ClusterName"
 #' @param reso numeric, clustering resolution parameter, default 0.5
 #' @return Seurat object, merge snapSeurat and rnaSeurat
-#' Add predict Id from rnaSeurat for snapSeurat on metaData,
+#' Add predictId  and predictMaxScore from rnaSeurat for snapSeurat on metaData,
 #' Add imputed gene expression from rnaSeurat for snapSeurat with Assay: "RNA"
+#' Add tech as either ATAC or RNA in the meta.data
 #' Clustering on the merged Seurat object as Co-Embedding Seurat object
 #' @import ggplot2
 #' @import Seurat
@@ -97,4 +98,58 @@ integrateWithScRNASeq <- function(snapSeurat,
   coEmbed <- FindNeighbors(coEmbed, dims = eigDims)
   coEmbed <- FindClusters(coEmbed, resolution = reso)
   return(coEmbed)
+}
+
+#' Calculate Overlap Score matrix for ATAC and RNA jointly embedding metaTable
+#'
+#' @param meta data.frame,
+#' three columns as ident, atacCluster, rnaCluster defined as in the following
+#' parameters
+#' @param ident characters, name of column ident, i.e. the cluster Ids for
+#' the co-embedded seurat, "coembed.idents" as default.
+#' @param atacCluster characters, name of column atac,
+#' "MajorType"as default
+#' @param rnaCluster characters, name of column rna,
+#' "ClusterName" as default
+#' @return data.frame of numeric, atac by rna
+#' @export
+getOverlapMatrix <- function(meta,
+                             ident = "coembed.idents",
+                             atacCol = "MajorType",
+                             rnaCol = "ClusterName") {
+  ident2rna <- data.frame(idents = meta[[ident]], rna_label = meta[[rnaCol]])
+  ident2rna <- ident2rna[complete.cases(ident2rna), ]
+  ident2atac <- data.frame(idents = meta[[ident]], atac_label = meta[[atacCol]])
+  ident2atac <- ident2atac[complete.cases(ident2atac), ]
+  rnaTable <- table(ident2rna)
+  atacTable <- table(ident2atac)
+  rnaPct <- apply(rnaTable, 2, function(x) {
+    x / sum(x)
+  })
+  atacPct <- apply(atacTable, 2, function(x) {
+    x / sum(x)
+  })
+  rnaClusterName <- colnames(rnaPct)
+  atacClusterName <- colnames(atacPct)
+  calOvlpScoreElement <- function(t1l, t2l) {
+    t1PctDF <- data.frame(rnaPct[, t1l])
+    colnames(t1PctDF) <- "t1"
+    t1PctDF$ident <- rownames(t1PctDF)
+    t2PctDF <- data.frame(atacPct[, t2l])
+    colnames(t2PctDF) <- "t2"
+    t2PctDF$ident <- rownames(t2PctDF)
+    comp <- plyr::join(t1PctDF, t2PctDF, by = "ident", type = "full")
+    comp[is.na(comp)] <- 0
+    comp$ident <- NULL
+    comp <- t(comp)
+    return(sum(apply(comp, 2, min)))
+  }
+  rna2atacType <- outer(rnaClusterName, atacClusterName, FUN = paste, sep = "|")
+  ovlpScore <- apply(rna2atacType, MARGIN = c(1, 2), FUN = function(i) {
+    t <- unlist(strsplit(i, split = "|", fixed = TRUE))
+    calOvlpScoreElement(t[1], t[2])
+  })
+  rownames(ovlpScore) <- rnaClusterName
+  colnames(ovlpScore) <- atacClusterName
+  return(t(ovlpScore))
 }

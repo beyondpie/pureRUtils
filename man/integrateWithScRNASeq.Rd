@@ -37,8 +37,9 @@ if NULL (default), use all the dims.}
 }
 \value{
 Seurat object, merge snapSeurat and rnaSeurat
-Add predict Id from rnaSeurat for snapSeurat on metaData,
+Add predictId  and predictMaxScore from rnaSeurat for snapSeurat on metaData,
 Add imputed gene expression from rnaSeurat for snapSeurat with Assay: "RNA"
+Add tech as either ATAC or RNA in the meta.data
 Clustering on the merged Seurat object as Co-Embedding Seurat object
 }
 \description{
