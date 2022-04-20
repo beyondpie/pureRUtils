@@ -46,7 +46,7 @@ getMultipleColors <- function(types, b = 0.05, e = 0.2,
 #' @param n integer, number of intervals for explicit color points withn [b, e]
 #' @param pal characters, color palette, "Zissou1" as default
 #' @param type characters, parameter for wesanderson pacakge, "continuous" as default
-#' @return function, f(value \in [b, e]) will return a color
+#' @return function, f(value within [b, e]) will return a color
 #' @export
 getContinuousColors <- function(b = 0,
                                 e = 1,

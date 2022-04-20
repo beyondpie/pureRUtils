@@ -18,7 +18,7 @@ getContinuousColors(b = 0, e = 1, n = 50, pal = "Zissou1", type = "continuous")
 \item{type}{characters, parameter for wesanderson pacakge, "continuous" as default}
 }
 \value{
-function, f(value \in \link{b, e}) will return a color
+function, f(value within \link{b, e}) will return a color
 }
 \description{
 Use circlize::colorRamp2 to do the linear interplotation
