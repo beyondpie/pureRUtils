@@ -101,7 +101,9 @@ integrateWithScRNASeq <- function(snapSeurat,
 }
 
 #' Calculate Overlap Score matrix for ATAC and RNA jointly embedding metaTable
-#'
+#' @description
+#' Based on the co-embeding clustering result, we summation the minmum scores of
+#' the percentages of cells on either ATAC or RNA group in each cluster.
 #' @param meta data.frame,
 #' three columns as ident, atacCluster, rnaCluster defined as in the following
 #' parameters
