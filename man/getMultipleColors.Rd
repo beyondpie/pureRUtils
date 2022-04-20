@@ -14,7 +14,7 @@ getMultipleColors(types, b = 0.05, e = 0.2, pal = turbo, showColor = FALSE)
 \item{e}{numeric, \link{0,1} color end value, 0.2 default, no less than b
 NOTE, both b and e are calculated from the right-side in the color scales.}
 
-\item{pal}{literal, color pannel to use, default is turbo (no "" needed)}
+\item{pal}{literal, color palette to use, default is turbo (no "" needed)}
 
 \item{showColor}{bool, after generating the color
 if need to show colors with scales::show_col, default FALSE}

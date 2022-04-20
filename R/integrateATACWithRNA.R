@@ -109,9 +109,9 @@ integrateWithScRNASeq <- function(snapSeurat,
 #' parameters
 #' @param ident characters, name of column ident, i.e. the cluster Ids for
 #' the co-embedded seurat, "coembed.idents" as default.
-#' @param atacCluster characters, name of column atac,
+#' @param atacCol characters, name of column atac,
 #' "MajorType"as default
-#' @param rnaCluster characters, name of column rna,
+#' @param rnaCol characters, name of column rna,
 #' "ClusterName" as default
 #' @return data.frame of numeric, atac by rna
 #' @export
@@ -120,9 +120,9 @@ getOverlapMatrix <- function(meta,
                              atacCol = "MajorType",
                              rnaCol = "ClusterName") {
   ident2rna <- data.frame(idents = meta[[ident]], rna_label = meta[[rnaCol]])
-  ident2rna <- ident2rna[complete.cases(ident2rna), ]
+  ident2rna <- ident2rna[stats::complete.cases(ident2rna), ]
   ident2atac <- data.frame(idents = meta[[ident]], atac_label = meta[[atacCol]])
-  ident2atac <- ident2atac[complete.cases(ident2atac), ]
+  ident2atac <- ident2atac[stats::complete.cases(ident2atac), ]
   rnaTable <- table(ident2rna)
   atacTable <- table(ident2atac)
   rnaPct <- apply(rnaTable, 2, function(x) {

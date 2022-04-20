@@ -19,10 +19,10 @@ parameters}
 \item{ident}{characters, name of column ident, i.e. the cluster Ids for
 the co-embedded seurat, "coembed.idents" as default.}
 
-\item{atacCluster}{characters, name of column atac,
+\item{atacCol}{characters, name of column atac,
 "MajorType"as default}
 
-\item{rnaCluster}{characters, name of column rna,
+\item{rnaCol}{characters, name of column rna,
 "ClusterName" as default}
 }
 \value{
