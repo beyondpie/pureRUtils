@@ -17,6 +17,10 @@ Imports:
     Matrix,
     ggplot2,
     Seurat,
-    plyr
+    plyr,
+    viridis,
+    scales,
+    circlize,
+    wesanderson
 Depends:
     R (>= 3.5.0)

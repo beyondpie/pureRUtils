@@ -29,5 +29,6 @@ the co-embedded seurat, "coembed.idents" as default.}
 data.frame of numeric, atac by rna
 }
 \description{
-Calculate Overlap Score matrix for ATAC and RNA jointly embedding metaTable
+Based on the co-embeding clustering result, we summation the minmum scores of
+the percentages of cells on either ATAC or RNA group in each cluster.
 }
