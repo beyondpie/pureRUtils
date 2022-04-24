@@ -29,5 +29,5 @@ You can install the development version of pureRUtils from [GitHub](https://gith
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("beyondpie/pureRUtils")
+remotes::install_github("beyondpie/pureRUtils")
 ```
