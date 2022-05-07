@@ -12,7 +12,8 @@ integrateWithScRNASeq(
   preprocessSnap = TRUE,
   preprocessRNA = TRUE,
   rnaTypeColnm = "ClusterName",
-  reso = 0.5
+  reso = 0.5,
+  reduction = "cca"
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ if NULL (default), use all the dims.}
 \item{rnaTypeColnm}{characters, colname for rnaSeurat's type, default "ClusterName"}
 
 \item{reso}{numeric, clustering resolution parameter, default 0.5}
+
+\item{reduction}{characters, method used in FindTransferAnchors,
+default "cca".}
 }
 \value{
 Seurat object, merge snapSeurat and rnaSeurat

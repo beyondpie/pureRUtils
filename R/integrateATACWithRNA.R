@@ -11,6 +11,8 @@
 #' @param preprocessRNA bool, if need to normalize, scale rnaSeurat, default TRUE
 #' @param rnaTypeColnm characters, colname for rnaSeurat's type, default "ClusterName"
 #' @param reso numeric, clustering resolution parameter, default 0.5
+#' @param reduction characters, method used in FindTransferAnchors,
+#' default "cca".
 #' @return Seurat object, merge snapSeurat and rnaSeurat
 #' Add predictId  and predictMaxScore from rnaSeurat for snapSeurat on metaData,
 #' Add imputed gene expression from rnaSeurat for snapSeurat with Assay: "RNA"
@@ -26,7 +28,8 @@ integrateWithScRNASeq <- function(snapSeurat,
                                   preprocessSnap = TRUE,
                                   preprocessRNA = TRUE,
                                   rnaTypeColnm = "ClusterName",
-                                  reso = 0.5) {
+                                  reso = 0.5,
+                                  reduction = "cca") {
   if (nrow(snapSeurat) < 1) {
     stop("No cells in snapSeurat.")
   }
@@ -53,7 +56,7 @@ integrateWithScRNASeq <- function(snapSeurat,
     features = VariableFeatures(rnaSeurat),
     reference.assay = "RNA",
     query.assay = snapAssay,
-    reduction = "cca"
+    reduction = reduction
   )
   ## predict type
   transferLabel <- TransferData(
