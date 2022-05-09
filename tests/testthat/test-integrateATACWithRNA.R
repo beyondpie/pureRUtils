@@ -21,3 +21,15 @@ test_that("getOverlapMatrix works", {
                c(length(unique(meta$atacLabel)) - 1,
                  length(unique(meta$rnaLabel)) - 1))
 })
+
+test_that("getOverlapMatrixOld works", {
+  meta <- readRDS(test_path("testdata", "testOvlp.rds"))
+  score <- getOverlapMatrixOld(meta = meta,
+                            ident = "idents",
+                            atacCol = "atacLabel",
+                            rnaCol = "rnaLabel")
+  expect_equal(dim(score),
+               c(length(unique(meta$atacLabel)) - 1,
+                 length(unique(meta$rnaLabel)) - 1))
+})
+
