@@ -21,6 +21,9 @@ Imports:
     viridis,
     scales,
     circlize,
-    wesanderson
+    wesanderson,
+    SnapATAC (>= 2.5.1)
 Depends:
     R (>= 3.5.0)
+Remotes:  
+    beyondpie/SnapATAC
