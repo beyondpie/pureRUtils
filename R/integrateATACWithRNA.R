@@ -84,7 +84,6 @@ integrateWithScRNASeq <- function(snapSeurat,
     weight.reduction = snapSeurat[["pca"]],
     dims = eigDims
   )
-  ## TODO: support not imputed RNA but directly gmat.
   snapSeurat[["RNA"]] <- CreateAssayObject(counts = geneImpute@data)
   rm(geneImpute)
 
