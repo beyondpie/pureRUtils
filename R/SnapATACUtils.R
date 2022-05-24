@@ -45,6 +45,11 @@ snapGmat2Seurat <- function(snap, eigDims = 1:50,
 #' @param height numeric, default is 7
 #' @return None.
 #' Side effect: generate the figure file.
+#' @importFrom graphics axis legend mtext par
+#' @importFrom methods new
+#' @importFrom utils read.table
+#' @importFrom stats as.formula complete.cases
+#' @importFrom grDevices dev.off pdf
 #' @export
 plotConsensus <- function(consensusFile, type,
                           outPDF, width = 7, height = 7) {
