@@ -36,3 +36,41 @@ snapGmat2Seurat <- function(snap, eigDims = 1:50,
   }
   return(snapSeurat)
 }
+
+#' Consensus plot.
+#' @param consensusFile characters
+#' @param type characters, cell type name for title
+#' @param outPDF characters
+#' @param width numeric, default is 7
+#' @param height numeric, default is 7
+#' @return None.
+#' Side effect: generate the figure file.
+#' @export
+plotConsensus <- function(consensusFile, type,
+                          outPDF, width = 7, height = 7) {
+  consensus <- read.table(consensusFile)
+  colnames(consensus) <- c("file", "Resolution", "Dispersion",
+                           "ProportionOfAmbiguousClustering")
+  pdf(file = outPDF, width = width, height = height)
+  par(mar = c(5, 4, 4, 4) + 0.3)
+  plot(consensus$Resolution, consensus$Dispersion,
+       type = "l", pch = 16, col = "red", lwd = 4,
+       xlab = "Resolution", ylab = "Dispersion", cex.lab = 1.5,
+       main =
+         paste("Consensus analysis for Leiden-base clustering on",
+               type, "cells")
+       )
+  par(new = TRUE)
+  plot(consensus$Resolution, consensus$ProportionOfAmbiguousClustering,
+       pch = 17, col = "blue",
+       axes = FALSE, type = "l", lwd = 4, xlab = "", ylab = ""
+       )
+  axis(side = 4,
+       at = pretty(range(consensus$ProportionOfAmbiguousClustering)))
+  legend("topright", legend = c("Dispersion (left)", "PAC (right)"),
+         col = c("red", "blue"), cex = 1, lty = c(3, 3))
+  mtext("Proportion Of Ambiguous Clustering (PAC)",
+        side = 4, line = 3, cex = 1.5)
+  dev.off()
+}
+

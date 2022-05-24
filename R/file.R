@@ -15,6 +15,29 @@ cleanOutfile <- function(outf, remove = TRUE) {
   }
 }
 
+#' If file does not exists, then prepare it.
+#' @param f characters, file name
+#' @return None
+#' @export
+prepareOutfile <- function(f) {
+  if (!file.exists(f)) {
+    cleanOutfile(f, remove = TRUE)
+  }
+}
+
+#' If dir does not exists, then create it.
+#' @param d characters, dir name
+#' @return None
+#' @export
+prepareOutdir <- function(d) {
+  if (!dir.exists(d)) {
+    message(paste(d, "does not exist and will be created."))
+    dir.create(d)
+  }
+}
+
+
+
 #' load RData file like readRDS
 #' @param fileRData characters, RData file.
 #' @param pattern characters, to check a RData file, default is "\\.RData"
@@ -42,4 +65,15 @@ checkArgsExistOrStop <- function(args) {
       stop("Args have no attribute ", v)
     }
   }))
+}
+
+#' Check if file/dir exist, if not, then stop
+#' @param f characters, a file or director
+#' @return None, will send stop signal if
+#' f doesn't exist.
+#' @export
+checkFileExistOrStop <- function(f) {
+  if ((!file.exists(f)) & (!dir.exists(f))) {
+    stop(f, " does not exist.")
+  }
 }
