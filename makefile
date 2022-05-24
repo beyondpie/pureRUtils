@@ -1,5 +1,10 @@
 RCODES := R/*.R
 
+define test_file
+    Rscript -e "devtools::test_active_file(file = './tests/testthat/test-$1.R')"
+endef
+
+t="sequence"
 
 install:
 	Rscript -e "remotes::install_github('beyondpie/pureRUtils')"
@@ -17,3 +22,8 @@ check:
 
 test:
 	Rscript -e "devtools::test(pkg = '.')"
+
+# useage
+# make test_file t=file
+test_file:
+	$(call test_file,$t)
