@@ -5,6 +5,7 @@
 #' @param eigDims vector, used for choosing PCA components, default 1:50
 #' @param assay characters, name used in Seurat object
 #' @param pcaPrefix characters, default "SnapATAC_"
+#' @param nameDelim characters, default "-"
 #' @param useSnapATACEmbed bool, use SnapATAC embedding as pca
 #' embeding in Seurat, default TRUE.
 #' @return Seurat object
@@ -13,6 +14,7 @@
 snapGmat2Seurat <- function(snap, eigDims = 1:50,
                             assay = "GeneScore",
                             pcaPrefix = "SnapATAC_",
+                            nameDelim = "-",
                             useSnapATACEmbed = TRUE) {
   # check snap@gmat
   # check snap@smat@dmat
@@ -20,7 +22,9 @@ snapGmat2Seurat <- function(snap, eigDims = 1:50,
   rownames(metaData) <- paste(metaData$sample, metaData$barcode, sep = ".")
   gmatUse <- Matrix::t(snap@gmat)
   colnames(gmatUse) <- paste(metaData$sample, metaData$barcode, sep = ".")
-  snapSeurat <- Seurat::CreateSeuratObject(counts = gmatUse, assay = assay)
+  snapSeurat <- Seurat::CreateSeuratObject(counts = gmatUse, assay =
+                                                               assay,
+                                           names.delim = nameDelim)
   snapSeurat <- Seurat::AddMetaData(snapSeurat, metadata = metaData)
   if (useSnapATACEmbed) {
     message("Use SnapATAC Embed as pca in Seurat.")

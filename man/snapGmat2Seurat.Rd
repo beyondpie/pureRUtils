@@ -9,6 +9,7 @@ snapGmat2Seurat(
   eigDims = 1:50,
   assay = "GeneScore",
   pcaPrefix = "SnapATAC_",
+  nameDelim = "-",
   useSnapATACEmbed = TRUE
 )
 }
@@ -21,6 +22,8 @@ snap@gmat must be not empty; snap@smat@dmat should not be empty}
 \item{assay}{characters, name used in Seurat object}
 
 \item{pcaPrefix}{characters, default "SnapATAC_"}
+
+\item{nameDelim}{characters, default "-"}
 
 \item{useSnapATACEmbed}{bool, use SnapATAC embedding as pca
 embeding in Seurat, default TRUE.}
