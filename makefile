@@ -12,7 +12,8 @@ endef
 t="sequence"
 
 install:
-	Rscript -e "remotes::install_github('beyondpie/pureRUtils')"
+	Rscript -e "remotes::install_github('beyondpie/pureRUtils', upgrade
+	= 'never')"
 
 all: README.md doc
 
