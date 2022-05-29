@@ -3,6 +3,7 @@
 export(checkArgsExistOrStop)
 export(checkFileExistOrStop)
 export(cleanOutfile)
+export(downSampleOnSnap)
 export(getContinuousColors)
 export(getMultipleColors)
 export(getOverlapMatrix)

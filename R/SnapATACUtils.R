@@ -83,3 +83,23 @@ plotConsensus <- function(consensusFile, type,
   dev.off()
 }
 
+
+#' Down sample snap object based on a given cluster meta.
+#' @param snap SnapObject from SnapATAC
+#' @param cluster vector of characters/integer
+#' aligned with the cells in snap in order.
+#' @param n integer, number of samples in each unique cluster id.
+#' @return SnapObject
+#' @export
+downSampleOnSnap <- function(snap, cluster, n = 200) {
+  snapList <- lapply(unique(cluster), function(i) {
+    s <- snap[cluster %in% i, , drop = FALSE]
+    if(nrow(s) <= n) {
+      return(s)
+    } else {
+      return(s[sample(nrow(s), size = n, replace = F), ])
+    }
+  })
+  return(SnapATAC::snapListRbind(snapList = snapList))
+}
+
