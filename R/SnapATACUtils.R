@@ -94,10 +94,10 @@ plotConsensus <- function(consensusFile, type,
 downSampleOnSnap <- function(snap, cluster, n = 200) {
   snapList <- lapply(unique(cluster), function(i) {
     s <- snap[cluster %in% i, , drop = FALSE]
-    if(nrow(s) <= n) {
+    if(SnapATAC::nrow(s) <= n) {
       return(s)
     } else {
-      return(s[sample(nrow(s), size = n, replace = F), ])
+      return(s[sample(SnapATAC::nrow(s), size = n, replace = F), ])
     }
   })
   return(SnapATAC::snapListRbind(snapList = snapList))
