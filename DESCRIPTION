@@ -29,6 +29,9 @@ Imports:
     utils,
     stats,
     reshape2,
+    future,
+    future.apply,
+    RcppAnnoy,
     SnapATAC (>= 2.5.1)
 Depends:
     R (>= 3.5.0)
