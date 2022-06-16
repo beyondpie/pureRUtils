@@ -103,3 +103,161 @@ downSampleOnSnap <- function(snap, cluster, n = 200) {
   return(SnapATAC::snapListRbind(snapList = snapList))
 }
 
+#' SnapATAC landmark embedding.
+#' @param snap snap object of SnapATAC, default NULL
+#' @param snapFile characters name of the snap File to load, default NULL
+#' @param blacklistGR GenomicRanges object, default NULL
+#' @param blackListFile characters file of the blacklistGR, default NULL
+#' @param binSize integer dim of bmat, default 5,000
+#' @param nPC integer dim of embeding for embedding, default 50
+#' @param ncores integer number of cores to use for parallel, default 1
+#' @param outFile characters to which we write snap with embedding, default NULL
+#' @param excludeChr characters used to filter bmat, default "random|chrM"
+#' @param removeBmat bool default FALSE
+#' @param removeJmat bool default FALSE
+#' @return SnapObject
+#' @export
+landmarkEmbedding <- function(snap = NULL,
+                              snapFile = NULL,
+                              blacklistGR = NULL,
+                              blackListFile = NULL,
+                              binSize = 5000,
+                              nPC = 50,
+                              ncores = 1,
+                              outFile = NULL,
+                              excludeChr = "random|chrM",
+                              removeBmat = FALSE,
+                              removeJmat = FALSE) {
+  if (!is.null(snapFile)) {
+    if (grepl("\\.RData", snapFile)) {
+      snap <- loadRData(snapFile, check = FALSE)
+    } else {
+      snap <- readRDS(snapFile)
+    }
+  }
+  if (is.null(snap)) {
+    stop("No snap found.")
+  }
+  if (!is.null(blackListFile)) {
+    blacklistGR <- read.table(blackListFile,
+      header = FALSE, quote = "")
+  }
+  if(is.null(blacklistGR)) {
+    stop("No blacklist found")
+  }
+  if (!is.null(outFile)) {
+    prepareOutfile(outFile)
+  }
+  ## add bmat
+  snap <- SnapATAC::addBmatToSnap(
+    obj = snap, bin.size = binSize, do.par = TRUE,
+    num.cores = ncores,
+    checkSnap = FALSE
+  )
+  ## preprocess
+  idy <- S4Vectors::queryHits(
+    GenomicRanges::findOverlaps(snap@feature, blacklistGR))
+  if (length(idy) > 0) {
+    message("remove blacklist")
+    snap <- snap[, -idy, mat = "bmat"]
+  }
+
+  chr.exclude <-  GenomeInfoDb::seqlevels(snap@feature)[
+    grep(excludeChr, GenomeInfoDb::seqlevels(snap@feature))
+  ]
+
+  idy <- grep(paste(chr.exclude, collapse = "|"), snap@feature)
+  if (length(idy) > 0) {
+    message("remove ", excludeChr)
+    snap <- snap[, -idy, mat = "bmat"]
+  }
+
+  ## filter based on bincoverage
+  bin.cov <- log10(Matrix::colSums(snap@bmat) + 1)
+  binCutoff <- quantile(bin.cov[bin.cov > 0], 0.95)
+  idy <- which(bin.cov <= binCutoff & bin.cov > 0)
+  snap <- snap[, idy, mat = "bmat"]
+  snap <- SnapATAC::makeBinary(snap, mat = "bmat")
+
+  snap <- SnapATAC::runDiffusionMaps(
+    obj = snap,
+    input.mat = "bmat",
+    num.eigs = nPC,
+    method = "RSpectra"
+  )
+  snap@metaData$landmark <- 1
+  if(removeBmat) {
+    message("Remove bmat.")
+    snap <- SnapATAC::rmBmatFromSnap(snap)
+  }
+  if(removeJmat) {
+    message("Remove jmat.")
+    snap@jmat <- SnapATAC::newJaccard()
+  }
+  
+  if (!is.null(outFile)) {
+    saveRDS(object = snap, file = outFile)
+  }
+  return(snap)
+}
+
+#' SnapATAC query embedding.
+#' @param snapLandmark snap object of SnapATAC, default NULL
+#' @param snaplandmarkFile characters name of the snap File to load, default NULL
+#' @param snapQuery snap object of SnapATAC, default NULL
+#' @param snapQueryFile characters name of the snap File to load, default NULL
+#' @param binSize integer dim of bmat, default 5,000
+#' @param outFile characters to which we write snap with embedding, default NULL
+#' @param removeBmat bool default FALSE
+#' @param removeJmat bool default FALSE
+#' @return SnapObject
+#' @export
+queryEmbedding <- function(snapLandmark = NULL,
+                           snapLandmarkFile = NULL,
+                           snapQuery = NULL,
+                           snapQueryFile = NULL,
+                           binSize = 5000,
+                           outFile = NULL,
+                           removeBmat = TRUE,
+                           removeJmat = TRUE) {
+  if (!is.null(snapLandmarkFile)) {
+    snapLandmark <- readRDS(snapLandmarkFile)
+  }
+  if (is.null(snapLandmark)) {
+    stop("No snapLandmark found.")
+  }
+  if (!is.null(snapQueryFile)) {
+    snapQuery <- readRDS(snapQueryFile)
+  }
+  if (is.null(snapQuery)) {
+    stop("No snapQuery found.")
+  }
+  if (!is.null(outFile)) {
+    prepareOutfile(outFile)
+  }
+  message("Add bmat.")
+  snapQuery <- SnapATAC::addBmatToSnap(snapQuery, bin.size = binSize)
+  snapQuery <- SnapATAC::makeBinary(snapQuery)
+  idy <- unique(S4Vectors::queryHits(
+    GenomicRanges::findOverlaps(snapQuery@feature, snapLandmark@feature)))
+  snapQuery <- snapQuery[, idy, mat = "bmat"]
+  message("Run embedding for query set.")
+  snapQuery <- SnapATAC::runDiffusionMapsExtension(
+    obj1 = snapLandmark,
+    obj2 = snapQuery,
+    input.mat = "bmat"
+  )
+  snapQuery@metaData$landmark <- 0
+  if(removeBmat) {
+    message("Remove query bmat")
+    snapQuery <- SnapATAC::rmBmatFromSnap(snapQuery)
+  }
+  if(removeJmat) {
+    message("Remove jmat.")
+    snapQuery@jmat <- SnapATAC::newJaccard()
+  }
+  if(!is.null(outFile)) {
+    saveRDS(object = snapQuery, file = outFile)
+  }
+  return(snapQuery)
+}
