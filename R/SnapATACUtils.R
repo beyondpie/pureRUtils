@@ -186,11 +186,11 @@ landmarkEmbedding <- function(snap = NULL,
     method = "RSpectra"
   )
   snap@metaData$landmark <- 1
-  if(removeBmat) {
+  if(removeBmat & (nrow(methods::slot(snapQuery, "bmat")) == 0L)) {
     message("Remove bmat.")
     snap <- SnapATAC::rmBmatFromSnap(snap)
   }
-  if(removeJmat) {
+  if(removeJmat & (nrow(methods::slot(snapQuery, "jmat")) == 0L)) {
     message("Remove jmat.")
     snap@jmat <- SnapATAC::newJaccard()
   }
@@ -248,11 +248,11 @@ queryEmbedding <- function(snapLandmark = NULL,
     input.mat = "bmat"
   )
   snapQuery@metaData$landmark <- 0
-  if(removeBmat) {
+  if(removeBmat & (nrow(methods::slot(snapQuery, "bmat")) == 0L)) {
     message("Remove query bmat")
     snapQuery <- SnapATAC::rmBmatFromSnap(snapQuery)
   }
-  if(removeJmat) {
+  if(removeJmat & (nrow(methods::slot(snapQuery, "jmat")) == 0L)) {
     message("Remove jmat.")
     snapQuery@jmat <- SnapATAC::newJaccard()
   }
@@ -260,4 +260,109 @@ queryEmbedding <- function(snapLandmark = NULL,
     saveRDS(object = snapQuery, file = outFile)
   }
   return(snapQuery)
+}
+
+#' Run SnapATAC KNN.
+#'
+#' It will check snapLandmark and snapQuery firstly,
+#' if snapLandmark is not NULL, will use it.
+#' if snapQuery then is also NULL, will merge them.
+#' if both of them are NULL, then use snapAllFile, snapAll in order.
+#' 
+#' @param snapAll
+#' @param snapAll SnapObject, default NULL
+#' @param snapAllFile characters, default NULL
+#' @param snapLandmark SnapObject, default NULL
+#' @param snapLandmarkFile characters, default NULL
+#' @param snapQuery SnapObject, default NULL
+#' @param snapQueryFile SnapObject, default NULL
+#' @param removeBmat bool, default TRUE
+#' @param removeJmat bool, default TRUE
+#' @param k integer, default 50
+#' @param dims integer or vector, default is 1:30
+#' @param method characters, method for KNN (either "RANN" or "Annoy")
+#' default "RANN"
+#' @param runUMAP bool, default TRUE
+#' @param umapNcores integer, default 1
+#' @param outmmtxFile characters, output file of mmtx, default NULL
+#' @param outSnapFile characters, default NULL
+#' @return SnapObject
+#' @export
+runKNN <- function(snapAll = NULL,
+                   snapAllFile = NULL,
+                   snapLandmark = NULL,
+                   snapLandmarkFile = NULL,
+                   snapQuery = NULL,
+                   snapQueryFile = NULL,
+                   removeBmat = TRUE,
+                   removeJmat = TRUE,
+                   k = 50,
+                   dims = 1:30,
+                   method = "RANN",
+                   runUMAP = TRUE,
+                   umapNcores = 1,
+                   outmmtxFile = NULL,
+                   outSnapFile = NULL) {
+  if (!is.null(snapQueryFile)) {
+    snapQuery <- readRDS(snapQueryFile)
+  }
+  if (!is.null(snapLandmarkFile)) {
+    snapLandmark <- readRDS(snapLandmarkFile)
+  }
+
+  if (!is.null(snapLandmark)) {
+    if (!is.null(snapQuery)) {
+      snapAll <- SnapATAC::snapRbind(snapLandmark, snapQuery)
+    } else {
+      snapAll <- snapLandmark
+    }
+  }
+  if (!is.null(snapAllFile)) {
+    snapAll <- readRDS(snapAllFile)
+  }
+
+  if (is.null(snapAll)) {
+    stop("Final snapAll is NULL.")
+  }
+
+  if (!is.null(outmmtxFile)) {
+    prepareOutfile(outmmtxFile)
+  }
+  if (!is.null(outSnapFile)) {
+    prepareOutfile(outSnapFile)
+  }
+
+  if (removeBmat & (nrow(methods::slot(snapAll, "bmat")) == 0L)) {
+    message("Remove snapAll bmat.")
+    snapAll <- SnapATAC::rmBmatFromSnap(snapAll)
+  }
+
+  if (removeJmat & (nrow(methods::slot(snapAll, "jmat")) == 0L)) {
+    message("Remove snapAll jmat.")
+    snapAll@jmat <- SnapATAC::newJaccard()
+  }
+  if (length(dims) == 1) {
+    message("Dim is a scalar and convert it to vector.")
+    dims <- 1:dims
+  }
+
+  message("Run KNN with k ", k, " and size of dims ", length(dims))
+  message("KNN method: ", method)
+  snapAll <- SnapATAC::runKNN(obj = snapAll, eigs.dims = dims, k = k, method = method)
+  if (!is.null(outmmtxFile)) {
+    message("save graph as mmtx file.")
+    Matrix::writeMM(snapAll@graph@mat, file = outmmtxFile)
+  }
+  if (runUMAP) {
+    message("Run Umap.")
+    snapAll <- SnapATAC::runViz(
+      obj = snapAll, tmp.folder = tempdir(), dims = 2,
+      eigs.dims = dims, method = "uwot", seed.use = 2022,
+      num.cores = umapNcores
+    )
+  }
+  if (!is.null(outSnapFile)) {
+    saveRDS(snapAll, outSnapFile)
+  }
+  return(snapAll)
 }
