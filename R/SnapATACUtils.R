@@ -471,3 +471,55 @@ runLeiden <- function(snap = NULL,
   }
   return(snap)
 }
+
+#' Generate list of ggplot figures of umap/tsne on the features
+#' If some feature is not in the meta, will have a NULL.
+#'
+#' @param embed data.frame cell by (x, y) dim, rownames are cells.
+#' @param meta data.frame cell by features, rownames are cells,
+#' colnames are features.
+#' @param names character vector, features to be draw
+#' Default is c("cluster", "tsse", "logumi")
+#' @param discretes bool vector, default is c(T, F, F)
+#' @param legends bool vector, default is c(F, T, T).
+#' @param addLabels bool vectors, default is c(T, F, F).
+#' @param n integer, number of down samples, default 10,000
+#' @param ... parameters smmtools::ggPoint, but seems no use there.
+#' @return list of ggplot object
+#' @export
+plot2D <- function(embed,
+                   meta,
+                   names = c("cluster", "tsse", "log10UMI"),
+                   discretes = c(TRUE, FALSE, FALSE),
+                   legends = c(FALSE, TRUE, TRUE),
+                   addLabels = c(TRUE, FALSE, FALSE),
+                   n = 10000,
+                   ...) {
+  commonRows <- base::intersect(rownames(embed), rownames(meta))
+  if (is.null(commonRows) | (length(commonRows) == 0)) {
+    stop("No common rows between embed and meta.")
+  }
+  embed <- embed[commonRows, ]
+  meta <- meta[commonRows, ]
+  p <- lapply(seq_along(names), function(i) {
+    if (names[i] %in% colnames(meta)) {
+      warning(names[i], " is not in meta.Skip it.")
+      return(NULL)
+    }
+    message("Drawing 2D image for ", names[i])
+    rowIndex <- which(!is.na(meta[, names[i]]))
+    if (length(rowIndex) > n) {
+      rowIndex <- sample(x = rowIndex, size = n, replace = FALSE)
+    }
+    r <- smmtools::ggPoint(
+      x = embed[rowIndex, 1],
+      y = embed[rowIndex, 2],
+      color = meta[rowIndex, names[i]],
+      discrete = discretes[i],
+      title = names[i],
+      labelMeans = addLabels[i]
+    )
+    return(r)
+  })
+  return(p)
+}
