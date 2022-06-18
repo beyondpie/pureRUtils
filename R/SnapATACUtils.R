@@ -367,6 +367,27 @@ runKNN <- function(snapAll = NULL,
   return(snapAll)
 }
 
+#' Run Leiden Algorithm.
+#' @param snap SnapObject default NULL
+#' @param snapFile characters default NULL
+#' @param r numeric resolution paramter for leiden, default 0.5
+#' @param pt characters partition type for leiden, default "RB"
+#' @param seed integer default NULL
+#' @param pathToPython characters where the python is, default NULL
+#' @param outLeidenFile characters default NULL
+#' @param outClusterMetaCSV characters default NULL
+#' @param outClusterPDF characters default NULL
+#' @param pdfn function used to draw figures for outClusterPDF
+#' the inputs are snap object and others
+#' default NULL.
+#' @param colName characters used for record cluster namae in snap meta,
+#' default is "cluster". if snap@metaData has this column,
+#' will use [colName].1 instead
+#' @param dims integer or vector for UMAP default is 1:30
+#' @param umapNcores integer default 1
+#' @param ... use for pdfn function
+#' @return SnapObject, slot "cluster" is the result
+#' @export
 runLeiden <- function(snap = NULL,
                       snapFile = NULL,
                       r = 0.5,
@@ -399,6 +420,7 @@ runLeiden <- function(snap = NULL,
     seed = seed,
     partitionType = pt
   )
+  snap@cluster <- as.factor(c)
   ## cluster start from 1
   if (!is.null(outLeidenFile)) {
     write.table(x = c, file = outLeidenFile,
@@ -420,9 +442,11 @@ runLeiden <- function(snap = NULL,
     if (is.null(pdfn)) {
       warning("No pdfn is found.")
     } else {
-    withr::with_pdf(outClusterPDF, code = {
-      pdfn(snap, outClusterPDF, ...)},
-      width = 10, height = 10)
+      pdfn(snap = snap, pdf = outClusterPDF)
+      ## withr::with_pdf(outClusterPDF, code = {
+      ##   pdfn(snap = snap, ...)},
+      ##   width = 10, height = 10)
+      ##
     }
   }# end of outClusterPDF
   if (!is.null(outClusterMetaCSV)) {
@@ -445,4 +469,5 @@ runLeiden <- function(snap = NULL,
       row.names = FALSE, col.names = TRUE,
       sep = "\t", quote = FALSE)
   }
+  return(snap)
 }
