@@ -32,8 +32,10 @@ Imports:
     future,
     future.apply,
     RcppAnnoy,
-    SnapATAC (>= 2.5.1)
+    SnapATAC (>= 2.5.1),
+    smmtools
 Depends:
     R (>= 3.5.0)
 Remotes: 
     beyondpie/SnapATAC
+    beyondpie/smmtools

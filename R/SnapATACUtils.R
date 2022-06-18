@@ -366,3 +366,83 @@ runKNN <- function(snapAll = NULL,
   }
   return(snapAll)
 }
+
+runLeiden <- function(snap = NULL,
+                      snapFile = NULL,
+                      r = 0.5,
+                      pt = "RB",
+                      seed = NULL,
+                      pathToPython = NULL,
+                      outLeidenFile = NULL,
+                      outClusterMetaCSV = NULL,
+                      outClusterPDF = NULL,
+                      pdfn = NULL,
+                      colName = "cluster",
+                      dims = 1:30,
+                      umapNcores = 1,
+                      ...) {
+  if (!is.null(snapFile)) {
+    snap <- readRDS(snapFile)
+  }
+  if (is.null(snap)) {
+    stop("Snap is NULL.")
+  }
+  invisible(lapply(c(outLeidenFile, outClusterMetaCSV, outClusterPDF),
+    function(i) {if (!is.null(i)) {prepareOutfile(i)}}))
+  message("Run Leiden algorithm with: resolution ", r,
+    " partition type: ", pt.)
+  message("python path: ", pathToPython)
+  c <- smmtools::runLeiden(
+    kmat = snap@graph@mat,
+    path_to_python = pathToPython,
+    reso = r,
+    seed = seed,
+    partitionType = pt
+  )
+  ## cluster start from 1
+  if (!is.null(outLeidenFile)) {
+    write.table(x = c, file = outLeidenFile,
+      row.names = FALSE, col.names = FALSE, quote = FALSE)
+  }
+  if (!is.null(outClusterPDF)) {
+    if (nrow(methods::slot(snap, "umap")) == 0L) {
+      warning("No UMAP found, and now calculate it.")
+      if (length(dims) == 1) {
+        message("Dim is a scalar and convert it to vector.")
+        dims <- 1:dims
+      }
+      snap <- SnapATAC::runViz(
+        obj = snap, tmp.folder = tempdir(), dims = 2,
+        eigs.dims = dims, method = "uwot", seed.use = 2022,
+        num.cores = umapNcores
+      )
+    } # end of update umap
+    if (is.null(pdfn)) {
+      warning("No pdfn is found.")
+    } else {
+    withr::with_pdf(outClusterPDF, code = {
+      pdfn(snap, outClusterPDF, ...)},
+      width = 10, height = 10)
+    }
+  }# end of outClusterPDF
+  if (!is.null(outClusterMetaCSV)) {
+    message("Output meta data to: ", outClusterMetaCSV)
+    m <- snap@metaData
+    if (!("CellID" %in% colnames(m))) {
+      m$CellID <- paste(snap@sample, snap@barcode, sep = ".")
+    }
+    if (colName %in% names(m)) {
+      warning(colName, " is in the column of snap meta data.")
+      colName <- paste0(colName, ".1")
+      warning("Use ", colName, " instead.")
+    }
+    m[, colName] <- c
+    if (nrow(methods::slot(snap, "umap")) > 1L) {
+      m$UMAP1 <- snap@umap[, 1]
+      m$UMAP2 <- snap@umap[, 2]
+    }
+    write.table(x = m, file = outClusterMetaCSV,
+      row.names = FALSE, col.names = TRUE,
+      sep = "\t", quote = FALSE)
+  }
+}
