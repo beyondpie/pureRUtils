@@ -15,27 +15,29 @@ biocViews:
 Imports:
     data.table,
     Matrix,
-    ggplot2,
-    Seurat,
-    plyr,
-    viridis,
-    scales,
-    circlize,
-    wesanderson,
-    withr,
-    methods,
-    graphics,
-    grDevices,
     utils,
     stats,
+    scales,
     reshape2,
     future,
     future.apply,
+    circlize,
+    wesanderson,
+    methods,
+    grid,
+    viridis,
+    graphics,
+    grDevices,
+    gridExtra,
+    ggplot2,
     RcppAnnoy,
+    Seurat,
+    reticulate,
+    plyr,
+    dplyr,
+    withr,
     SnapATAC (>= 2.5.1),
-    smmtools
 Depends:
     R (>= 3.5.0)
 Remotes: 
     beyondpie/SnapATAC
-    beyondpie/smmtools

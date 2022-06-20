@@ -387,12 +387,13 @@ runKNN <- function(snapAll = NULL,
 #' @param umapNcores integer default 1
 #' @param ... use for pdfn function
 #' @return SnapObject, slot "cluster" is the result
+#' @import reticulate
 #' @export
 runLeiden <- function(snap = NULL,
                       snapFile = NULL,
                       r = 0.5,
                       pt = "RB",
-                      seed = NULL,
+                      seed = 10,
                       pathToPython = NULL,
                       outLeidenFile = NULL,
                       outClusterMetaCSV = NULL,
@@ -411,16 +412,24 @@ runLeiden <- function(snap = NULL,
   invisible(lapply(c(outLeidenFile, outClusterMetaCSV, outClusterPDF),
     function(i) {if (!is.null(i)) {prepareOutfile(i)}}))
   message("Run Leiden algorithm with: resolution ", r,
-    " partition type: ", pt.)
-  message("python path: ", pathToPython)
-  c <- smmtools::runLeiden(
-    kmat = snap@graph@mat,
-    path_to_python = pathToPython,
-    reso = r,
-    seed = seed,
-    partitionType = pt
-  )
-  snap@cluster <- as.factor(c)
+          " partition type: ", pt.)
+  if(!is.null(pathToPython)) {
+    reticulate::use_python(pathToPython, required = TRUE)
+    message("python path: ", pathToPython)
+  }
+  setSessionTimeLimit(cpu = Inf, elapsed = Inf)
+  message("Loading python smmuty package.")
+  pymod <- reticulate::import(module = "smmuty", convert = FALSE)
+  message("Clustering.")
+  c <- as.factor(reticulate::py_to_r(
+    pymod$leiden(knn = reticulate::r_to_py(snap@graph@mat),
+                 reso = r,
+                 seed = 10,
+                 opt = pt)
+  ))
+  message("Summarize the clustering result:")
+  print(table(c))
+  snap@cluster <- c
   ## cluster start from 1
   if (!is.null(outLeidenFile)) {
     write.table(x = c, file = outLeidenFile,
@@ -442,11 +451,11 @@ runLeiden <- function(snap = NULL,
     if (is.null(pdfn)) {
       warning("No pdfn is found.")
     } else {
-      pdfn(snap = snap, pdf = outClusterPDF)
-      ## withr::with_pdf(outClusterPDF, code = {
-      ##   pdfn(snap = snap, ...)},
-      ##   width = 10, height = 10)
-      ##
+      withr::with_pdf(outCluster, code = {
+        pdfn(embed = snap@umap,
+             meta = snap@metaData,
+             ...)
+      }, width = 10, height = 10)
     }
   }# end of outClusterPDF
   if (!is.null(outClusterMetaCSV)) {
@@ -484,7 +493,7 @@ runLeiden <- function(snap = NULL,
 #' @param legends bool vector, default is c(F, T, T).
 #' @param addLabels bool vectors, default is c(T, F, F).
 #' @param n integer, number of down samples, default 10,000
-#' @param ... parameters smmtools::ggPoint, but seems no use there.
+#' @param ... parameters ggPoint, but seems no use there.
 #' @return list of ggplot object
 #' @export
 plot2D <- function(embed,
@@ -511,13 +520,14 @@ plot2D <- function(embed,
     if (length(rowIndex) > n) {
       rowIndex <- sample(x = rowIndex, size = n, replace = FALSE)
     }
-    r <- smmtools::ggPoint(
+    r <- ggPoint(
       x = embed[rowIndex, 1],
       y = embed[rowIndex, 2],
       color = meta[rowIndex, names[i]],
       discrete = discretes[i],
       title = names[i],
-      labelMeans = addLabels[i]
+      labelMeans = addLabels[i],
+      ...
     )
     return(r)
   })
