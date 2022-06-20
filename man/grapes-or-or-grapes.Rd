@@ -3,6 +3,7 @@
 \name{\%||\%}
 \alias{\%||\%}
 \title{OR of NULL.
+Ref: Seurat
 If the first element is not NULL, then return the first one,
 else return the second one.}
 \usage{
@@ -18,6 +19,7 @@ lhs if lhs is not NULL, else rhs
 }
 \description{
 OR of NULL.
+Ref: Seurat
 If the first element is not NULL, then return the first one,
 else return the second one.
 }

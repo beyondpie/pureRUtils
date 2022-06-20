@@ -269,7 +269,6 @@ queryEmbedding <- function(snapLandmark = NULL,
 #' if snapQuery then is also NULL, will merge them.
 #' if both of them are NULL, then use snapAllFile, snapAll in order.
 #' 
-#' @param snapAll
 #' @param snapAll SnapObject, default NULL
 #' @param snapAllFile characters, default NULL
 #' @param snapLandmark SnapObject, default NULL

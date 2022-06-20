@@ -1,8 +1,5 @@
-####################
-## From Seurat
-####################
-# Run annoy
-#
+#' Run annoy
+#' Ref: Seurat
 #' @param data Data to build the index with
 #' @param query A set of data to be queried against data
 #' @param metric Distance metric; can be one of "euclidean", "cosine", "manhattan",
@@ -41,8 +38,8 @@ AnnoyNN <- function(data,
   return(nn)
 }
 
-# Build the annoy index
-#
+#' Build the annoy index
+#' Ref: Seurat
 #' @param data Data to build the index with
 #' @param metric Distance metric; can be one of "euclidean", "cosine", "manhattan",
 #' "hamming"
@@ -107,6 +104,7 @@ AnnoySearch <- function(index, query, k, search.k = -1, include.distance = TRUE)
 }
 
 #' OR of NULL.
+#' Ref: Seurat
 #' If the first element is not NULL, then return the first one,
 #' else return the second one.
 #' @param lhs R object
