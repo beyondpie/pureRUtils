@@ -1,0 +1,5 @@
+- TODO move smmtools pure R functions here.
+
+- Low-dim embedding:
+  - UMAP
+  - TODO: TSNE
