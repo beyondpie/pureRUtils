@@ -466,14 +466,19 @@ runLeiden <- function(snap = NULL,
       warning("No pdfn is found.")
     } else {
       withr::with_pdf(outClusterPDF, code = {
-        pdfn(embed = snap@umap,
+        pList <- pdfn(embed = snap@umap,
              meta = m,
              checkRowName = FALSE,
              names = c(colName, "tsse", "log10UMI"),
              discretes = c(TRUE, FALSE, FALSE),
              legends = c(FALSE, TRUE, TRUE),
              addLabels = c(TRUE, FALSE, FALSE),
-              ...)
+             ...)
+        invisible(lapply(pList, function(p) {
+          if(!is.null(p)) {
+            print(p)
+          }
+        }))
       }, width = 10, height = 10)
     }
   }# end of outClusterPDF
