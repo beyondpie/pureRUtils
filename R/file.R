@@ -7,7 +7,7 @@ cleanOutfile <- function(outf, remove = TRUE) {
   outdir <- dirname(outf)
   if (!dir.exists(outdir)) {
     message(paste(outdir, "does not exist and will be created."))
-    dir.create(outdir)
+    dir.create(outdir, recursive = T)
   }
   if (file.exists(outf) & remove) {
     message(paste(outf, "exists and will be removed."))
@@ -32,7 +32,7 @@ prepareOutfile <- function(f) {
 prepareOutdir <- function(d) {
   if (!dir.exists(d)) {
     message(paste(d, "does not exist and will be created."))
-    dir.create(d)
+    dir.create(d, recursive = T)
   }
 }
 
