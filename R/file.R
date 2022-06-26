@@ -36,8 +36,6 @@ prepareOutdir <- function(d) {
   }
 }
 
-
-
 #' load RData file like readRDS
 #' @param fileRData characters, RData file.
 #' @param pattern characters, to check a RData file, default is "\\.RData"

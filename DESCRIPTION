@@ -25,6 +25,7 @@ Imports:
     wesanderson,
     methods,
     grid,
+    gtools,
     viridis,
     graphics,
     grDevices,

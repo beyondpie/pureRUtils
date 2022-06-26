@@ -8,6 +8,7 @@ If some feature is not in the meta, will have a NULL.}
 plot2D(
   embed,
   meta,
+  checkRowName = FALSE,
   names = c("cluster", "tsse", "log10UMI"),
   discretes = c(TRUE, FALSE, FALSE),
   legends = c(FALSE, TRUE, TRUE),
@@ -21,6 +22,8 @@ plot2D(
 
 \item{meta}{data.frame cell by features, rownames are cells,
 colnames are features.}
+
+\item{checkRowName}{bool, default FALSE}
 
 \item{names}{character vector, features to be draw
 Default is c("cluster", "tsse", "logumi")}

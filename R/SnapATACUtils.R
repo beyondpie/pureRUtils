@@ -139,8 +139,12 @@ landmarkEmbedding <- function(snap = NULL,
     stop("No snap found.")
   }
   if (!is.null(blackListFile)) {
-    blacklistGR <- read.table(blackListFile,
+    blackList <- read.table(blackListFile,
       header = FALSE, quote = "")
+    blacklistGR <- GenomicRanges::GRanges(                                                                                                                                                      
+      seqnames = blackList[, 1],                                                                                                                                                 
+      ranges = IRanges::IRanges(blackList[, 2], blackList[, 3])                                                                                                                           
+    )
   }
   if(is.null(blacklistGR)) {
     stop("No blacklist found")
@@ -186,11 +190,11 @@ landmarkEmbedding <- function(snap = NULL,
     method = "RSpectra"
   )
   snap@metaData$landmark <- 1
-  if(removeBmat & (nrow(methods::slot(snapQuery, "bmat")) == 0L)) {
+  if(removeBmat & (nrow(methods::slot(snap, "bmat")) != 0L)) {
     message("Remove bmat.")
     snap <- SnapATAC::rmBmatFromSnap(snap)
   }
-  if(removeJmat & (nrow(methods::slot(snapQuery, "jmat")) == 0L)) {
+  if(removeJmat) {
     message("Remove jmat.")
     snap@jmat <- SnapATAC::newJaccard()
   }
@@ -248,11 +252,11 @@ queryEmbedding <- function(snapLandmark = NULL,
     input.mat = "bmat"
   )
   snapQuery@metaData$landmark <- 0
-  if(removeBmat & (nrow(methods::slot(snapQuery, "bmat")) == 0L)) {
+  if(removeBmat & (nrow(methods::slot(snapQuery, "bmat")) != 0L)) {
     message("Remove query bmat")
     snapQuery <- SnapATAC::rmBmatFromSnap(snapQuery)
   }
-  if(removeJmat & (nrow(methods::slot(snapQuery, "jmat")) == 0L)) {
+  if(removeJmat) {
     message("Remove jmat.")
     snapQuery@jmat <- SnapATAC::newJaccard()
   }
@@ -331,12 +335,12 @@ runKNN <- function(snapAll = NULL,
     prepareOutfile(outSnapFile)
   }
 
-  if (removeBmat & (nrow(methods::slot(snapAll, "bmat")) == 0L)) {
+  if (removeBmat & (nrow(methods::slot(snapAll, "bmat")) != 0L)) {
     message("Remove snapAll bmat.")
     snapAll <- SnapATAC::rmBmatFromSnap(snapAll)
   }
 
-  if (removeJmat & (nrow(methods::slot(snapAll, "jmat")) == 0L)) {
+  if (removeJmat) {
     message("Remove snapAll jmat.")
     snapAll@jmat <- SnapATAC::newJaccard()
   }
@@ -411,7 +415,7 @@ runLeiden <- function(snap = NULL,
   invisible(lapply(c(outLeidenFile, outClusterMetaCSV, outClusterPDF),
     function(i) {if (!is.null(i)) {prepareOutfile(i)}}))
   message("Run Leiden algorithm with: resolution ", r,
-          " partition type: ", pt.)
+          " partition type: ", pt)
   if(!is.null(pathToPython)) {
     reticulate::use_python(pathToPython, required = TRUE)
     message("python path: ", pathToPython)
@@ -423,12 +427,23 @@ runLeiden <- function(snap = NULL,
   c <- as.factor(reticulate::py_to_r(
     pymod$leiden(knn = reticulate::r_to_py(snap@graph@mat),
                  reso = r,
-                 seed = 10,
+                 seed = 10L,
                  opt = pt)
   ))
   message("Summarize the clustering result:")
   print(table(c))
   snap@cluster <- c
+  m <- snap@metaData
+  if (!("CellID" %in% colnames(m))) {
+    m$CellID <- paste(snap@sample, snap@barcode, sep = ".")
+  }
+  if (colName %in% colnames(m)) {
+    warning(colName, " is in the column of snap meta data.")
+    colName <- paste0(colName, ".1")
+    warning("Use ", colName, " instead.")
+  }
+  m[, colName] <- c
+
   ## cluster start from 1
   if (!is.null(outLeidenFile)) {
     write.table(x = c, file = outLeidenFile,
@@ -450,25 +465,20 @@ runLeiden <- function(snap = NULL,
     if (is.null(pdfn)) {
       warning("No pdfn is found.")
     } else {
-      withr::with_pdf(outCluster, code = {
+      withr::with_pdf(outClusterPDF, code = {
         pdfn(embed = snap@umap,
-             meta = snap@metaData,
-             ...)
+             meta = m,
+             checkRowName = FALSE,
+             names = c(colName, "tsse", "log10UMI"),
+             discretes = c(TRUE, FALSE, FALSE),
+             legends = c(FALSE, TRUE, TRUE),
+             addLabels = c(TRUE, FALSE, FALSE),
+              ...)
       }, width = 10, height = 10)
     }
   }# end of outClusterPDF
   if (!is.null(outClusterMetaCSV)) {
     message("Output meta data to: ", outClusterMetaCSV)
-    m <- snap@metaData
-    if (!("CellID" %in% colnames(m))) {
-      m$CellID <- paste(snap@sample, snap@barcode, sep = ".")
-    }
-    if (colName %in% names(m)) {
-      warning(colName, " is in the column of snap meta data.")
-      colName <- paste0(colName, ".1")
-      warning("Use ", colName, " instead.")
-    }
-    m[, colName] <- c
     if (nrow(methods::slot(snap, "umap")) > 1L) {
       m$UMAP1 <- snap@umap[, 1]
       m$UMAP2 <- snap@umap[, 2]
@@ -486,6 +496,7 @@ runLeiden <- function(snap = NULL,
 #' @param embed data.frame cell by (x, y) dim, rownames are cells.
 #' @param meta data.frame cell by features, rownames are cells,
 #' colnames are features.
+#' @param checkRowName bool, default FALSE
 #' @param names character vector, features to be draw
 #' Default is c("cluster", "tsse", "logumi")
 #' @param discretes bool vector, default is c(T, F, F)
@@ -497,20 +508,23 @@ runLeiden <- function(snap = NULL,
 #' @export
 plot2D <- function(embed,
                    meta,
+                   checkRowName = FALSE,
                    names = c("cluster", "tsse", "log10UMI"),
                    discretes = c(TRUE, FALSE, FALSE),
                    legends = c(FALSE, TRUE, TRUE),
                    addLabels = c(TRUE, FALSE, FALSE),
                    n = 10000,
                    ...) {
-  commonRows <- base::intersect(rownames(embed), rownames(meta))
-  if (is.null(commonRows) | (length(commonRows) == 0)) {
-    stop("No common rows between embed and meta.")
+  if(checkRowName) {
+    commonRows <- base::intersect(rownames(embed), rownames(meta))
+    if (is.null(commonRows) | (length(commonRows) == 0)) {
+      stop("No common rows between embed and meta.")
+    }
+    embed <- embed[commonRows, ]
+    meta <- meta[commonRows, ]
   }
-  embed <- embed[commonRows, ]
-  meta <- meta[commonRows, ]
   p <- lapply(seq_along(names), function(i) {
-    if (names[i] %in% colnames(meta)) {
+    if (!(names[i] %in% colnames(meta))) {
       warning(names[i], " is not in meta.Skip it.")
       return(NULL)
     }
