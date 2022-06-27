@@ -446,6 +446,7 @@ runLeiden <- function(snap = NULL,
 
   ## cluster start from 1
   if (!is.null(outLeidenFile)) {
+    message("Output Leiden result: ", outLeidenFile)
     write.table(x = c, file = outLeidenFile,
       row.names = FALSE, col.names = FALSE, quote = FALSE)
   } else {
@@ -468,6 +469,7 @@ runLeiden <- function(snap = NULL,
       warning("No pdfn is found.")
       warning("No output of custer pdf.")
     } else {
+      message("Output cluster pdf: ", outClusterPDF)
       withr::with_pdf(outClusterPDF, code = {
         pList <- pdfn(embed = snap@umap,
              meta = m,
