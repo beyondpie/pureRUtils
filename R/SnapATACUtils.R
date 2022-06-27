@@ -448,6 +448,8 @@ runLeiden <- function(snap = NULL,
   if (!is.null(outLeidenFile)) {
     write.table(x = c, file = outLeidenFile,
       row.names = FALSE, col.names = FALSE, quote = FALSE)
+  } else {
+    warning("No output of Leiden cluster file.")
   }
   if (!is.null(outClusterPDF)) {
     if (nrow(methods::slot(snap, "umap")) == 0L) {
@@ -464,6 +466,7 @@ runLeiden <- function(snap = NULL,
     } # end of update umap
     if (is.null(pdfn)) {
       warning("No pdfn is found.")
+      warning("No output of custer pdf.")
     } else {
       withr::with_pdf(outClusterPDF, code = {
         pList <- pdfn(embed = snap@umap,
@@ -474,13 +477,14 @@ runLeiden <- function(snap = NULL,
              legends = c(FALSE, TRUE, TRUE),
              addLabels = c(TRUE, FALSE, FALSE),
              ...)
-        invisible(lapply(pList, function(p) {
+        lapply(pList, function(p) {
           if(!is.null(p)) {
             print(p)
           }
-        }))
-      }, width = 10, height = 10)
+        }) }, width = 10, height = 10)
     }
+  } else {
+    warning("No output of custer pdf.")
   }# end of outClusterPDF
   if (!is.null(outClusterMetaCSV)) {
     message("Output meta data to: ", outClusterMetaCSV)
@@ -491,6 +495,8 @@ runLeiden <- function(snap = NULL,
     write.table(x = m, file = outClusterMetaCSV,
       row.names = FALSE, col.names = TRUE,
       sep = "\t", quote = FALSE)
+  } else {
+    warning("No output of cluster meta file.")
   }
   return(snap)
 }
