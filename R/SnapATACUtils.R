@@ -430,11 +430,12 @@ runLeiden <- function(snap = NULL,
                  seed = 10L,
                  opt = pt)
   ))
+  ## snap only accept factors
+  snap@cluster <- c
   ## Label start from 1
   c <- as.integer(c)
   message("Summarize the clustering result:")
   print(table(c))
-  snap@cluster <- c
   m <- snap@metaData
   if (!("CellID" %in% colnames(m))) {
     m$CellID <- paste(snap@sample, snap@barcode, sep = ".")
