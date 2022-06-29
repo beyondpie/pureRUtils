@@ -430,6 +430,8 @@ runLeiden <- function(snap = NULL,
                  seed = 10L,
                  opt = pt)
   ))
+  ## Label start from 1
+  c <- as.integer(c)
   message("Summarize the clustering result:")
   print(table(c))
   snap@cluster <- c
