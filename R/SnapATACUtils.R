@@ -76,7 +76,7 @@ plotConsensus <- function(consensusFile, type,
        )
   axis(side = 4,
        at = pretty(range(consensus$ProportionOfAmbiguousClustering)))
-  legend("topright", legend = c("Dispersion (left)", "PAC (right)"),
+  legend("topright", legend = c("Dispersion (left;red)", "PAC (right;blue)"),
          col = c("red", "blue"), cex = 1, lty = c(3, 3))
   mtext("Proportion Of Ambiguous Clustering (PAC)",
         side = 4, line = 3, cex = 1.5)
