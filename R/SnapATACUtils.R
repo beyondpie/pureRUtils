@@ -222,6 +222,7 @@ queryEmbedding <- function(snapLandmark = NULL,
                            snapQueryFile = NULL,
                            binSize = 5000,
                            outFile = NULL,
+                           chunkSize = 20000,
                            removeBmat = TRUE,
                            removeJmat = TRUE) {
   if (!is.null(snapLandmarkFile)) {
@@ -239,7 +240,41 @@ queryEmbedding <- function(snapLandmark = NULL,
   if (!is.null(outFile)) {
     prepareOutfile(outFile)
   }
+  n <- nrow(snapQuery)
+  if (n > chunkSize) {
+    message(n, " has too many cells than ",
+            chunkSize, " chunk.")
+    message("now partition them into chunks.")
+    chunks <- split(seq(n), ceiling(seq(n) / chunkSize))
+  } else {
+    chunks <- NULL
+  }
   message("Add bmat.")
+  if (is.null(chunks)) {
+    snapQuery <- queryEmbedding.default(
+      snapLandmark, snapQuery, binSize, removeBmat, removeJmat)
+  } else {
+    snapQueryList <- lapply(chunks, function(i) {
+      s <- snapQuery[i, , drop = FALSE]
+      s <- queryEmbedding.default(
+        snapLandmark, s, binSzie, removeBmat, removeJmat
+      )
+      return(s)
+    })
+    snapQuery <- SnapATAC::snapListRbind(snapList = snapQueryList,
+                                         checkSnap = FALSE)
+  }
+  if(!is.null(outFile)) {
+    saveRDS(object = snapQuery, file = outFile)
+  }
+  return(snapQuery)
+}
+
+queryEmbedding.default <- function(snapLandmark,
+                                   snapQuery,
+                                   binSize = 5000,
+                                   removeBmat = TRUE,
+                                   removeJmat = TRUE) {
   snapQuery <- SnapATAC::addBmatToSnap(snapQuery, bin.size = binSize)
   snapQuery <- SnapATAC::makeBinary(snapQuery)
   idy <- unique(S4Vectors::queryHits(
@@ -252,16 +287,13 @@ queryEmbedding <- function(snapLandmark = NULL,
     input.mat = "bmat"
   )
   snapQuery@metaData$landmark <- 0
-  if(removeBmat & (nrow(methods::slot(snapQuery, "bmat")) != 0L)) {
+  if (removeBmat & (nrow(methods::slot(snapQuery, "bmat")) != 0L)) {
     message("Remove query bmat")
     snapQuery <- SnapATAC::rmBmatFromSnap(snapQuery)
   }
-  if(removeJmat) {
+  if (removeJmat) {
     message("Remove jmat.")
     snapQuery@jmat <- SnapATAC::newJaccard()
-  }
-  if(!is.null(outFile)) {
-    saveRDS(object = snapQuery, file = outFile)
   }
   return(snapQuery)
 }
