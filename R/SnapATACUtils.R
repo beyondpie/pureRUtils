@@ -212,6 +212,7 @@ landmarkEmbedding <- function(snap = NULL,
 #' @param snapQueryFile characters name of the snap File to load, default NULL
 #' @param binSize integer dim of bmat, default 5,000
 #' @param outFile characters to which we write snap with embedding, default NULL
+#' @param chunkSize integer default 20,000
 #' @param removeBmat bool default FALSE
 #' @param removeJmat bool default FALSE
 #' @return SnapObject

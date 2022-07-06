@@ -11,6 +11,7 @@ queryEmbedding(
   snapQueryFile = NULL,
   binSize = 5000,
   outFile = NULL,
+  chunkSize = 20000,
   removeBmat = TRUE,
   removeJmat = TRUE
 )
@@ -25,6 +26,8 @@ queryEmbedding(
 \item{binSize}{integer dim of bmat, default 5,000}
 
 \item{outFile}{characters to which we write snap with embedding, default NULL}
+
+\item{chunkSize}{integer default 20,000}
 
 \item{removeBmat}{bool default FALSE}
 
