@@ -153,11 +153,15 @@ landmarkEmbedding <- function(snap = NULL,
     prepareOutfile(outFile)
   }
   ## add bmat
-  snap <- SnapATAC::addBmatToSnap(
-    obj = snap, bin.size = binSize, do.par = TRUE,
-    num.cores = ncores,
-    checkSnap = FALSE
-  )
+  if (nrow(snap@bmat) > 0) {
+    message("Snap has bmat, will skip addBmat.")
+  } else {
+    snap <- SnapATAC::addBmatToSnap(
+      obj = snap, bin.size = binSize, do.par = TRUE,
+      num.cores = ncores,
+      checkSnap = FALSE
+    )
+  }
   ## preprocess
   idy <- S4Vectors::queryHits(
     GenomicRanges::findOverlaps(snap@feature, blacklistGR))
@@ -181,7 +185,12 @@ landmarkEmbedding <- function(snap = NULL,
   binCutoff <- quantile(bin.cov[bin.cov > 0], 0.95)
   idy <- which(bin.cov <= binCutoff & bin.cov > 0)
   snap <- snap[, idy, mat = "bmat"]
-  snap <- SnapATAC::makeBinary(snap, mat = "bmat")
+  ## binary snap bmat
+  if(max(snap@bmat) == 1) {
+    message("@bmat is already binarized.")
+  } else {
+    snap <- SnapATAC::makeBinary(snap, mat = "bmat")
+  }
 
   snap <- SnapATAC::runDiffusionMaps(
     obj = snap,
@@ -241,7 +250,7 @@ queryEmbedding <- function(snapLandmark = NULL,
   if (!is.null(outFile)) {
     prepareOutfile(outFile)
   }
-  n <- nrow(snapQuery)
+  n <- SnapATAC::nrow(snapQuery)
   if (n > chunkSize) {
     message(n, " has too many cells than ",
             chunkSize, " chunk.")
@@ -276,8 +285,16 @@ queryEmbedding.default <- function(snapLandmark,
                                    binSize = 5000,
                                    removeBmat = TRUE,
                                    removeJmat = TRUE) {
-  snapQuery <- SnapATAC::addBmatToSnap(snapQuery, bin.size = binSize)
-  snapQuery <- SnapATAC::makeBinary(snapQuery)
+  if (nrow(snapQuery@bmat) > 0) {
+    message("snapQuery has bmat, will skip addBmat for it.")
+  } else {
+    snapQuery <- SnapATAC::addBmatToSnap(snapQuery, bin.size = binSize)
+  }
+  if(max(snapQuery@bmat) == 1) {
+    message("@bmat is already binaryized.")
+  } else {
+    snapQuery <- SnapATAC::makeBinary(snapQuery)
+  }
   idy <- unique(S4Vectors::queryHits(
     GenomicRanges::findOverlaps(snapQuery@feature, snapLandmark@feature)))
   snapQuery <- snapQuery[, idy, mat = "bmat"]
