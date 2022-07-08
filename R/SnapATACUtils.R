@@ -267,7 +267,7 @@ queryEmbedding <- function(snapLandmark = NULL,
     snapQueryList <- lapply(chunks, function(i) {
       s <- snapQuery[i, , drop = FALSE]
       s <- queryEmbedding.default(
-        snapLandmark, s, binSzie, removeBmat, removeJmat
+        snapLandmark, s, binSize, removeBmat, removeJmat
       )
       return(s)
     })
