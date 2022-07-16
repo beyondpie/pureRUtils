@@ -477,7 +477,7 @@ runLeiden <- function(snap = NULL,
   c <- as.factor(reticulate::py_to_r(
     pymod$leiden(knn = reticulate::r_to_py(snap@graph@mat),
                  reso = r,
-                 seed = 10L,
+                 seed = as.integer(seed),
                  opt = pt)
   ))
   ## snap only accept factors
