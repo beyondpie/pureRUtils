@@ -140,11 +140,10 @@ landmarkEmbedding <- function(snap = NULL,
   }
   if (!is.null(blackListFile)) {
     blackList <- read.table(blackListFile,
-      header = FALSE, quote = "")
-    blacklistGR <- GenomicRanges::GRanges(                                                                                                                                                      
-      seqnames = blackList[, 1],                                                                                                                                                 
-      ranges = IRanges::IRanges(blackList[, 2], blackList[, 3])                                                                                                                           
-    )
+                            header = FALSE, quote = "")
+    blacklistGR <- GenomicRanges::GRanges(
+      seqnames = blackList[, 1],
+      ranges = IRanges::IRanges(blackList[, 2], blackList[, 3]))
   }
   if(is.null(blacklistGR)) {
     stop("No blacklist found")
@@ -611,4 +610,106 @@ plot2D <- function(embed,
     return(r)
   })
   return(p)
+}
+
+#' Filter bmat
+#' removing common bins and those overlapped with blacklist
+#' @param snap snap object of SnapATAC, default NULL
+#' @param snapFile characters name of the snap File to load, default NULL
+#' @param low double threshold, default 0 (bin freq <= low will be removed)
+#' @param high double threshold, default 0.99 (bin freq > high will be removed)
+#' @param blacklistGR GenomicRanges object, default NULL
+#' @param blackListFile characters file of the blacklistGR, default NULL
+#' @param binSize integer dim of bmat, default 5,000
+#' @param ncores integer number of cores to use for parallel, default 1
+#' @param excludeChr characters used to filter bmat, default "random|chrM"
+#' @param addBmatIfEmpty bool, default FALSE
+#' @return SnapObject
+#' @export
+filterSnapBmat <- function(snap = NULL,
+                           snapFile = NULL,
+                           low = 0,
+                           high = 0.99,
+                           blackListFile = NULL,
+                           blacklistGR = NULL,
+                           excludeChr = "random|chrM",
+                           addBmatIfEmpty = FALSE,
+                           binSize = 5000,
+                           ncores = 1) {
+  ## load snap
+  if (!is.null(snapFile)) {
+    if (grepl("\\.RData", snapFile)) {
+      snap <- loadRData(snapFile, check = FALSE)
+    } else {
+      snap <- readRDS(snapFile)
+    }
+  }
+  if (is.null(snap)) {
+    stop("No snap found.")
+  }
+  ## check bmat
+  if(nrow(snap@bmat) < 1) {
+    warning("Snap has no bmat.")
+    if(addBmatIfEmpty) {
+      message("Add bmat to snap.")
+      snap <- SnapATAC::addBmatToSnap(
+        obj = snap, bin.size = binSize, do.par = TRUE,
+        num.cores = ncores,
+        checkSnap = FALSE)
+    } else {
+      stop("Add bmat is FALSE.")
+    }
+  } 
+
+  ## load black list
+  if (!is.null(blackListFile)) {
+    blackList <- read.table(blackListFile,
+                            header = FALSE, quote = "")
+    blacklistGR <- GenomicRanges::GRanges(
+      seqnames = blackList[, 1],
+      ranges = IRanges::IRanges(blackList[, 2], blackList[, 3]))
+  }
+  if(is.null(blacklistGR)) {
+    warning("Blacklist is empty.")
+  } else {
+    message("Filtering bin based on blacklist...")
+    idy <- S4Vectors::queryHits(
+      GenomicRanges::findOverlaps(snap@feature, blacklistGR))
+    if (length(idy) > 0) {
+      message("Remove blacklist-related ", length(idy), " bins.")
+      snap <- snap[, -idy, mat = "bmat"]
+    } else {
+      message("No blacklist-related bins.")
+    } 
+  }
+  message("Remove bins from the excludeChr: ", excludeChr)
+  chr.exclude <-  GenomeInfoDb::seqlevels(snap@feature)[
+    grep(excludeChr, GenomeInfoDb::seqlevels(snap@feature))
+  ]
+  idy <- grep(paste(chr.exclude, collapse = "|"), snap@feature)
+  if (length(idy) > 0) {
+    message("Remove ", length(idy),
+            " bins located in ", excludeChr)
+    snap <- snap[, -idy, mat = "bmat"]
+  } else {
+    message("No bins located in the excludeChr: ", excludeChr)
+  }
+  message("Filter bins based on the coverage.")
+  bincov <- Matrix::colSums(snap@bmat) / nrow(snap@bmat)
+  lowIndex <- which(bincov <= low)
+  highIndex <- which(bincov > high)
+  message(length(lowIndex), " features are blow ", low,
+          " frequency.")
+  message(length(highIndex), " features are above ", high,
+          " frequencey.")
+  removeIndex <- union(lowIndex, highIndex)
+  if(length(removeIndex) == length(bincov)) {
+    message("All the features will be filtered.")
+    snap@bmat <- Matrix::Matrix(nrow = 0, ncol = 0, sparse = TRUE)
+  } else {
+    message(length(removeIndex), " / ", length(bincov),
+            " features are removed.")
+    snap <- snap[ , -removeIndex, mat = "bmat"]
+  }
+  return(snap)
 }
