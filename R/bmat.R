@@ -99,6 +99,10 @@ getPvalueOfNDiff.default <- function(mat,
   }
   message("Enriched bin from ", ith, " is ", length(si))
   message("Enriched bin from ", jth, " is ", length(sj))
+  if(length(intersect(si, sj)) < 1) {
+    message("The two sets have no joint element.")
+    return(c(length(si) + length(sj), 0.0))
+  }
   ## total number of diff bins
   r <- length(si) + length(sj) - 2 * length(intersect(si, sj))
   message("Total number of diff bins between ",
