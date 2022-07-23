@@ -81,6 +81,24 @@ getPvalueOfNDiff.default <- function(mat,
   nj <- sum(group == jth)
   si <- which(Matrix::colSums(mat[group == ith, , drop = FALSE]) / ni >= threshold)
   sj <- which(Matrix::colSums(mat[group == jth, , drop = FALSE]) / nj >= threshold)
+  if (length(si) < 1) {
+    message(ith, " has no enriched bins.")
+    return(c(-1, 0.0))
+  }
+  if (length(sj) < 1) {
+    message(jth, " has no enriched bins.")
+    return(c(-1, 0.0))
+  }
+  if(length(si) == ncol(mat)) {
+    message(ith, " treats all bins as enriched.")
+    return(c(-1, 0.0))
+  }
+  if(length(sj) == ncol(mat)) {
+    message(jth, " treats all bins as enriched.")
+    return(c(-1, 0.0))
+  }
+  message("Enriched bin from ", ith, " is ", si)
+  message("Enriched bin from ", jth, " is ", sj)
   ## total number of diff bins
   r <- length(si) + length(sj) - 2 * length(intersect(si, sj))
   message("Total number of diff bins between ",
@@ -152,64 +170,145 @@ getPvalueOfNDiff.multiGroup <- function(mat, group,
   return(list(diffbin = s, p = r))
 }
 
+
 #' Based on pval matrix, link the nodes without significant p-values.
-#' This is achieved by recursive way, which I think is too difficult.
-#' Should have much simpler method.
 #' @param pvalmat symmetric matrix
 #' @param pthres double, default is 0.1
-#' @return list of vectors, each vector is a graph module
+#' @param prefix characters, default is "c"
+#' @return list of vectors, each vector/scalar is a graph module
 #' defined by the pval matrix.
 #' @export
-getIsolatedGroup <- function(pvalmat, pthres = 0.1) {
-  findCoModule <- function(graph, ith = 1) {
-    if (ith == length(nodeUsed)) {
-      if (nodeUsed[ith]) {
-        return(c())
-      }
-      ## change a variable outside of function
-      nodeUsed[ith] <<- TRUE
-      return(c(ith))
-    }
-    candidates <- which(graph[ith, ] == 1)
-    ## symmetric matrix, and only up-triangle will be considered here.
-    candidates <- candidates[candidates > ith]
-
-
-    if (length(candidates) < 1) {
-      if (nodeUsed[ith]) {
-        return(c())
-      }
-      nodeUsed[ith] <<- TRUE
-      return(c(ith))
-    }
-    cc <- candidates[!nodeUsed[candidates]]
-    if (length(cc) < 1) {
-      if (nodeUsed[ith]) {return(c())}
-      nodeUsed[ith] <<- TRUE
-      return(c(ith))
-    }
-    r <- unlist(lapply(cc, function(i) {findCoModule(graph, i)}))
-    if (nodeUsed[ith]) {
-      return(r)
-    }
-    nodeUsed[ith] <<- TRUE
-    return(c(ith, r))
+getIsolatedGroup <- function(pvalmat,
+                             pthres = 0.1,
+                             prefix = "c") {
+  adj <- 1 - (pvalmat < pthres)
+  degree <- colSums(adj)
+  ## if node linked with all the others, treat it as isolated one.
+  fdIds <- which(degree == (nrow(pvalmat) - 1))
+  if(length(fdIds) > 0) {
+    message("Nodes with full degree: ", paste(fdIds, collapse = ","))
+    message("Treated as isolated nodes.")
+    adj[fdIds, ] <- 0.0
+    adj[, fdIds] <- 0.0
   }
+  diag(adj) <- 1
+  graph <- igraph::graph_from_adjacency_matrix(
+    adjmatrix = adj,
+    mode = "undirected",
+    weighted = TRUE,
+    diag = TRUE)
+  modules <- igraph::components(graph = graph)
+  return(igraphModule2List(modules = modules, prefix = prefix))
+}
 
-  if (nrow(pvalmat) == 1) {
-    return(list(1))
-  }
-
-  graph <- 1 - (pvalmat <= pthres)
-  diag(graph) <- 1
-  nodeUsed <- rep(FALSE, nrow(pvalmat))
-  r <- lapply(seq(nrow(pvalmat)), function(i) {
-    s <- findCoModule(graph = graph, ith = i)
-    if (length(s) < 1) {
-      return(NULL)
-    }
-    return(s)
+#' Transfer modules from igraph::components to a list.
+#' @param modules list, returned from igraph::components
+#' @param prefix characters, default is "c"
+#' @return list of vector / scalar with names
+#' @export
+igraphModule2List <- function(modules, prefix = "c") {
+  clusterIds <- seq(modules$no)
+  r <- lapply(clusterIds, function(i) {
+    return(which(modules$membership == i))
   })
-  result <- r[!sapply(r, is.null)]
-  return(result)
+  names(r) <- paste0(prefix, clusterIds)
+  return(r)
+}
+
+#' Transer list of numeric to string
+#' @param module list of numeric
+#' @param sepkv characters, sep between key and value, default is ":"
+#' @param sepv characters, sep between values, default is "."
+#' @param sepk characters, sep between keys, default is ","
+#' @return characters
+#' @export
+listOfNumeric2str <- function(module, sepkv = ":",
+                              sepv = ".", sepk = ",") {
+  if (is.null(names(module))) {
+    names(module) <- paste0("c", seq_along(module))
+  }
+  r <- vapply(seq_along(module), function(i) {
+    paste(names(module)[i], paste(module[[i]], collapse = sepv),
+          sep = sepkv)
+  }, "c1:1.2")
+  return(paste(r, collapse = sepk))
+}
+
+#' Transfer specific strings to adjacent matrix
+#' A typical string like: pval@c1-c2:0,c1-c3:0
+#' @param mystring characters, like: pval@c1-c2:0,c1-c3:0
+#' @param title characters, default is "pval@"
+#' @param sepg characters, sep between groups, default is ","
+#' @param sepk characters, sep between keys, default is "-"
+#' @param sepkv characters, sep between key and value, default is ":"
+#' @param clusterPrefix characters, default is "c"
+#' @return Matrix symmetric
+#' @export
+strToAdjmat <- function(mystring, title = "pval@",
+                        sepg = ",", sepk = "-", sepkv = ":",
+                        clusterPrefix = "c") {
+  mystring <- gsub(title, "", mystring)
+  pairs <- strsplit(x = mystring, split = sepg, fixed = TRUE)[[1]]
+  twoColDF <- t(vapply(pairs, function(p) {
+    t <- strsplit(p, split = sepkv, fixed = TRUE)[[1]]
+    return(c(t[1], trimws(t[2])))
+  }, c("c1-c2", "0.3")))
+  uniqueClusters <- unique(unlist(
+    lapply(twoColDF[,1], function(cij) {
+      t <- strsplit(cij, split = sepk, fixed = TRUE)[[1]]
+      t <- gsub(clusterPrefix, "", t)
+      t <- as.integer(t)
+      return(t)
+    })
+  ))
+  df <- matrix(data = 0, nrow = max(uniqueClusters),
+               ncol = max(uniqueClusters))
+  rownames(df) <- paste0(clusterPrefix, seq(nrow(df)))
+  colnames(df) <- rownames(df)
+  for(i in seq(nrow(twoColDF))) {
+    cij <- twoColDF[i,1]
+    v <- as.numeric(twoColDF[i,2])
+    t <- strsplit(cij, split = sepk, fixed = TRUE)[[1]]
+    t <- gsub(clusterPrefix, "", t)
+    t <- as.integer(t)
+    df[t[1], t[2]] <- v
+    df[t[2], t[1]] <- v
+  }
+  return(df)
+}
+
+
+#' Transfer the upper tri of a matrix to a string
+#' @param mat Matrix
+#' @param sepg characters, sep between groups, default is ","
+#' @param sepk characters, sep between keys, default is "-"
+#' @param sepkv characters, sep between key and value, default is ":"
+#' @param digit integer, default 2
+#' @return characters
+#' @export
+uptri2str <- function(mat,
+                      sepkv = ":", sepk = "-", sepg = ",",
+                      digit = 2) {
+  if (length(mat) == 1) {
+    if (is.null(names(mat))) {
+      if (is.null(rownames(mat))) {
+        names(mat) <- "c1"
+      } else {
+        names(mat) <- rownames(mat)
+      }
+    }
+    return(paste(names(mat), 1, sep = sepkv))
+  }
+  if (is.null(rownames(mat))) {
+    rownames(mat) <- paste0("c", seq(nrow(mat)))
+  }
+  n <- nrow(mat)
+  r <- vapply(seq(n - 1), function(i) {
+    v <- vapply((i + 1):n, function(j) {
+      paste(paste(rownames(mat)[i], rownames(mat)[j], sep = sepk),
+        round(mat[i, j], digit), sep = sepkv)
+    }, "c1-c2:0.1")
+    paste(v, collapse = sepg)
+  }, "c1-c2:0.1,c1-c3:0.2")
+  paste(r, collapse = sepg)
 }

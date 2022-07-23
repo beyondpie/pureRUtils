@@ -2,23 +2,21 @@
 % Please edit documentation in R/bmat.R
 \name{getIsolatedGroup}
 \alias{getIsolatedGroup}
-\title{Based on pval matrix, link the nodes without significant p-values.
-This is achieved by recursive way, which I think is too difficult.
-Should have much simpler method.}
+\title{Based on pval matrix, link the nodes without significant p-values.}
 \usage{
-getIsolatedGroup(pvalmat, pthres = 0.1)
+getIsolatedGroup(pvalmat, pthres = 0.1, prefix = "c")
 }
 \arguments{
 \item{pvalmat}{symmetric matrix}
 
 \item{pthres}{double, default is 0.1}
+
+\item{prefix}{characters, default is "c"}
 }
 \value{
-list of vectors, each vector is a graph module
+list of vectors, each vector/scalar is a graph module
 defined by the pval matrix.
 }
 \description{
 Based on pval matrix, link the nodes without significant p-values.
-This is achieved by recursive way, which I think is too difficult.
-Should have much simpler method.
 }
