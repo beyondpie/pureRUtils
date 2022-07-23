@@ -97,8 +97,8 @@ getPvalueOfNDiff.default <- function(mat,
     message(jth, " treats all bins as enriched.")
     return(c(-1, 0.0))
   }
-  message("Enriched bin from ", ith, " is ", si)
-  message("Enriched bin from ", jth, " is ", sj)
+  message("Enriched bin from ", ith, " is ", length(si))
+  message("Enriched bin from ", jth, " is ", length(sj))
   ## total number of diff bins
   r <- length(si) + length(sj) - 2 * length(intersect(si, sj))
   message("Total number of diff bins between ",
