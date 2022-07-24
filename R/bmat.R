@@ -58,6 +58,7 @@ getCutoffFromShuffledBmat <- function(sBmat, scale = 3.0,
 #' @param nperm integer, default 20
 #' @return vector
 #' first is number of diff bin, second is p-value
+#' @importFrom stringr str_glue
 #' @export
 getPvalueOfNDiff.default <- function(mat,
                                      group,
@@ -89,20 +90,28 @@ getPvalueOfNDiff.default <- function(mat,
     message(jth, " has no enriched bins.")
     return(c(-1, 0.0))
   }
-  if(length(si) == ncol(mat)) {
-    message(ith, " treats all bins as enriched.")
-    return(c(-1, 0.0))
-  }
-  if(length(sj) == ncol(mat)) {
-    message(jth, " treats all bins as enriched.")
-    return(c(-1, 0.0))
-  }
+  ## if(length(si) == ncol(mat)) {
+  ##   message(ith, " treats all bins as enriched.")
+  ##   return(c(-1, 0.0))
+  ## }
+  ## if(length(sj) == ncol(mat)) {
+  ##   message(jth, " treats all bins as enriched.")
+  ##   return(c(-1, 0.0))
+  ## }
   message("Enriched bin from ", ith, " is ", length(si))
   message("Enriched bin from ", jth, " is ", length(sj))
   if(length(intersect(si, sj)) < 1) {
     message("The two sets have no joint element.")
     return(c(length(si) + length(sj), 0.0))
   }
+
+  nJoint <- length(intersect(si, sj))
+  message(str_glue("number of joint between {ith}th and {jth}th: {nJoint}"))
+  ni_j <- length(setdiff(si, sj))
+  nj_i <- length(setdiff(sj, si))
+  message(str_glue("Bins in {ith}th not in {jth}th: {ni_j}"))
+  message(str_glue("Bins in {jth}th not in {ith}th: {nj_i}"))
+  
   ## total number of diff bins
   r <- length(si) + length(sj) - 2 * length(intersect(si, sj))
   message("Total number of diff bins between ",
@@ -186,15 +195,17 @@ getIsolatedGroup <- function(pvalmat,
                              pthres = 0.1,
                              prefix = "c") {
   adj <- 1 - (pvalmat < pthres)
-  degree <- colSums(adj)
-  ## if node linked with all the others, treat it as isolated one.
-  fdIds <- which(degree == (nrow(pvalmat) - 1))
-  if(length(fdIds) > 0) {
-    message("Nodes with full degree: ", paste(fdIds, collapse = ","))
-    message("Treated as isolated nodes.")
-    adj[fdIds, ] <- 0.0
-    adj[, fdIds] <- 0.0
-  }
+
+  ## * if node linked with all the others, treat it as isolated one.
+  ## degree <- colSums(adj)
+  ## fdIds <- which(degree == (nrow(pvalmat) - 1))
+  ## if(length(fdIds) > 0) {
+  ##   message("Nodes with full degree: ", paste(fdIds, collapse = ","))
+  ##   message("Treated as isolated nodes.")
+  ##   adj[fdIds, ] <- 0.0
+  ##   adj[, fdIds] <- 0.0
+  ## }
+
   diag(adj) <- 1
   graph <- igraph::graph_from_adjacency_matrix(
     adjmatrix = adj,
