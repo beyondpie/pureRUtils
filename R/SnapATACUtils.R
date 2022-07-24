@@ -548,7 +548,7 @@ runLeiden <- function(snap = NULL,
     }
     write.table(x = m, file = outClusterMetaCSV,
       row.names = FALSE, col.names = TRUE,
-      sep = "\t", quote = FALSE)
+      sep = ",", quote = FALSE)
   } else {
     warning("No output of cluster meta file.")
   }
