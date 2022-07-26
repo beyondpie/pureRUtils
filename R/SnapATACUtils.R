@@ -1,3 +1,53 @@
+#' Order Snap based on the sample information
+#' This is critical for adding bmat and other related functions in SnapATAC
+#' @param s snap object
+#' @return snap object
+#' @export
+orderSnap <- function(s) {
+  if (all(s@sample == sort(s@sample))) {
+    message("No need to order the snap since samples are ordered.")
+  } else {
+    message("Need to order the snap sine samples are not ordered")
+    s <- s[order(s@sample), ]
+  }
+  return(s)
+}
+
+#' Empty snap's KNN graph if it has.
+#' @param s snap object
+#' @return snap object
+#' @export
+emptySnapGraph <- function(s) {
+  ngraph <- nrow(s@graph@mat)
+  if (ngraph > 0) {
+    message(ngraph, " nodes in current snap graph, and remove it.")
+    s@graph@mat <- Matrix::Matrix(0, 0, 0, sparse = TRUE)
+    s@graph@k <- numeric()
+    s@graph@snn <- FALSE
+    s@graph@file <- character()
+    s@graph@snn.prune <- numeric()
+  } else {
+    message("No KNN graph is found in the snap.")
+  }
+  return(s)
+}
+
+#' Empty snap's embedding recorded in smat slot if it has.
+#' @param s snap object
+#' @return snap object
+#' @export
+emptySnapEmbedding <- function(s) {
+  if (nrow(s@smat@dmat) > 0) {
+    message("Snap has smat, now remove it.")
+    s@smat@dmat <- matrix(0, 0, 0)
+    s@smat@sdev <- numeric()
+    s@smat@method <- character()
+  } else {
+    message("Snap has no smat.")
+  }
+  return(s)
+}
+
 #' Convert snap object to Seurat by gmat
 #'
 #' @param snap snap object defined in SnapATAC package
