@@ -7,7 +7,7 @@ orderSnap <- function(s) {
   if (all(s@sample == sort(s@sample))) {
     message("No need to order the snap since samples are ordered.")
   } else {
-    message("Need to order the snap sine samples are not ordered")
+    message("Need to order the snap since samples are not ordered")
     s <- s[order(s@sample), ]
   }
   return(s)
