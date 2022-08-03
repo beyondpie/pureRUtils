@@ -8,7 +8,6 @@ If some feature is not in the meta, will have a NULL.}
 plot2D(
   embed,
   meta,
-  colormeta = NULL,
   checkRowName = FALSE,
   names = c("cluster", "tsse", "log10UMI"),
   discretes = c(TRUE, FALSE, FALSE),
@@ -23,10 +22,6 @@ plot2D(
 
 \item{meta}{data.frame cell by features, rownames are cells,
 colnames are features.}
-
-\item{colormeta}{dta.frame cell by features, rownames are cells
-colnames are colors of the features, default is NULL, under which,
-meta will be used.}
 
 \item{checkRowName}{bool, default FALSE}
 
