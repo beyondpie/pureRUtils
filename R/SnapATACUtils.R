@@ -611,6 +611,9 @@ runLeiden <- function(snap = NULL,
 #' @param embed data.frame cell by (x, y) dim, rownames are cells.
 #' @param meta data.frame cell by features, rownames are cells,
 #' colnames are features.
+#' @param colormeta dta.frame cell by features, rownames are cells
+#' colnames are colors of the features, default is NULL, under which,
+#' meta will be used.
 #' @param checkRowName bool, default FALSE
 #' @param names character vector, features to be draw
 #' Default is c("cluster", "tsse", "logumi")
@@ -623,6 +626,7 @@ runLeiden <- function(snap = NULL,
 #' @export
 plot2D <- function(embed,
                    meta,
+                   colormeta = NULL,
                    checkRowName = FALSE,
                    names = c("cluster", "tsse", "log10UMI"),
                    discretes = c(TRUE, FALSE, FALSE),
@@ -638,6 +642,10 @@ plot2D <- function(embed,
     embed <- embed[commonRows, ]
     meta <- meta[commonRows, ]
   }
+  if(is.null(colormeta)) {
+    message("colormeta is null, and use meta names as default.")
+    colormeta <- meta
+  }
   p <- lapply(seq_along(names), function(i) {
     if (!(names[i] %in% colnames(meta))) {
       warning(names[i], " is not in meta.Skip it.")
@@ -651,7 +659,7 @@ plot2D <- function(embed,
     r <- ggPoint(
       x = embed[rowIndex, 1],
       y = embed[rowIndex, 2],
-      color = meta[rowIndex, names[i]],
+      color = colormeta[rowIndex, names[i]],
       discrete = discretes[i],
       title = names[i],
       labelMeans = addLabels[i],
