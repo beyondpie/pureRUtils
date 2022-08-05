@@ -763,3 +763,112 @@ filterSnapBmat <- function(snap = NULL,
   }
   return(snap)
 }
+
+#' Add bmat or gmat to snap
+#'
+#' @param snap snap object
+#' @param cellGroup vector of characters
+#' cluster labels for snap default is NULL
+#' @param group characters which cluster needes
+#' default is NULL
+#' @param outDir characters default is NULL
+#' @param matType characters default is "bmat"
+#' @param gencode characters default is "vM16"
+#' @param ndp integer default is -1
+#' if its value is larger than 0, then down sampling will be used.
+#' @param ncores integer default is 2
+#' @param force bool default is TRUE
+#' if add mat even the mat already exists
+#' @param binSize integer default is 5000
+#' @param coverFile bool default is TRUE
+#' when set it TRUE, it will cover the output file if exists.
+#' @param prefix characters default is "snap", which is used for output.
+#' @return snap object with corresponding mat.
+#' @export
+addMatToSnap <- function(snap,
+                         cellGroup = NULL,
+                         group = NULL,
+                         outDir = NULL,
+                         matType = "bmat",
+                         gencode = "vM16",
+                         ndp = -1,
+                         ncores = 2,
+                         force = TRUE,
+                         binSize = 5000,
+                         coverFile = TRUE,
+                         prefix = "snap") {
+  # * get rowIndex belonging to a group
+  rowIndex <- seq(nrow(snap))
+  if ((!is.null(cellGroup)) & (length(cellGroup) != nrow(snap))) {
+    stop("cellGroup size does not match snap cell number.")
+  }
+
+  if (!is.null(cellGroup) & (!is.null(goup))) {
+    rowIndex <- cellGroup %in% group
+    if (sum(rowIndex) == 0) {
+      warning(group, " does not exist, and skip it.")
+      return(NULL)
+    }
+  }
+  # * down sampling if needed
+  if ((ndp > 0) & (sum(rowIndex) > ndp)) {
+    message("Downsample: ", ndp)
+    rowIndex <- sort(sample(which(rowIndex), size = ndp, replace = FALSE))
+  }
+  # * get snap
+  s <- snap[rowIndex, ]
+  # ** double check the order of the snap
+  s <- pureRUtils::orderSnap(s)
+  # * get mat
+  if (!(matType %in% c("bmat", "gmat"))) {
+    stop("Do not support ", matType)
+  }
+  # * check if need to get mat
+  flag <- TRUE
+  n <- nrow(snap@bmat)
+  if (matType == "gmat") {
+    n <- nrow(snap@gmat)
+  }
+  if (n != 0L) {
+    message("The snap has already owned a ", matType)
+    if (!force) {
+      message("Skip it due to the rule is not forced.")
+      flag <- FALSE
+    }
+  }
+  # * only run when flag is TRUE
+  if (flag) {
+    message("Get ", matType)
+    if (matType == "bmat") {
+      s <- SnapATAC::addBmatToSnap(obj = s, bin.size = binSize,
+        do.par = TRUE, num.cores = ncores,
+        checkSnap = TRUE)
+    } else {
+      s <- SnapATAC::addGmatToSnap(obj = s, do.par = TRUE,
+        num.cores = ncores, checkSnap = TRUE)
+
+    }
+  }
+  # * output
+  if (is.null(outDir)) {
+    return(s)
+  }
+  prepareOutdir(outDir)
+  if (ndp > 0) {
+    prefix <- paste(prefix, paste("dp", ndp, sep = "-"), sep = ".")
+  }
+  suffix <- paste(matType, "rds", sep = ".")
+  outfile <- file.path(outDir, paste(prefix, suffix, sep = "."))
+  if (matType == "gmat") {
+    outmat <- file.path(outDir,
+                        paste(prefix, paste("gencode", gencode, sep = "-"),
+                              suffix, sep = "."))
+  }
+  if (file.exists(outfile) & (!coverFile)) {
+    message("File exist. Skip.")
+  } else {
+    message("Generate ", matType, " file: ", outfile)
+    saveRDS(s, outfile)
+  }
+  return(s)
+}

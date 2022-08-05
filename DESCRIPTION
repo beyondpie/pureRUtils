@@ -38,6 +38,7 @@ Imports:
     dplyr,
     withr,
     igraph,
+    stringr,
     SnapATAC (>= 2.5.1),
 Depends:
     R (>= 3.5.0)
