@@ -803,7 +803,7 @@ addMatToSnap <- function(snap,
     stop("cellGroup size does not match snap cell number.")
   }
 
-  if (!is.null(cellGroup) & (!is.null(goup))) {
+  if (!is.null(cellGroup) & (!is.null(group))) {
     rowIndex <- cellGroup %in% group
     if (sum(rowIndex) == 0) {
       warning(group, " does not exist, and skip it.")
