@@ -799,7 +799,7 @@ addMatToSnap <- function(snap,
                          prefix = "snap") {
   # * get rowIndex belonging to a group
   rowIndex <- seq(nrow(snap))
-  if ((!is.null(cellGroup)) & (length(cellGroup) != nrow(snap))) {
+  if ((!is.null(cellGroup)) & (length(cellGroup) != SnapATAC::nrow(snap))) {
     stop("cellGroup size does not match snap cell number.")
   }
 
