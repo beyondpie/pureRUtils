@@ -1,3 +1,61 @@
+#' Generate list of ggplot figures of umap/tsne on the features
+#' If some feature is not in the meta, will have a NULL.
+#'
+#' @param embed data.frame cell by (x, y) dim, rownames are cells.
+#' @param meta data.frame cell by features, rownames are cells,
+#' colnames are features.
+#' @param checkRowName bool, default FALSE
+#' @param names character vector, features to be draw
+#' Default is c("cluster", "tsse", "logumi")
+#' @param discretes bool vector, default is c(T, F, F)
+#' @param legends bool vector, default is c(F, T, T).
+#' @param addLabels bool vectors, default is c(T, F, F).
+#' @param n integer, number of down samples, default 10,000
+#' @param ... parameters ggPoint, but seems no use there.
+#' @return list of ggplot object
+#' @export
+plot2D <- function(embed,
+                   meta,
+                   checkRowName = FALSE,
+                   names = c("cluster", "tsse", "log10UMI"),
+                   discretes = c(TRUE, FALSE, FALSE),
+                   legends = c(FALSE, TRUE, TRUE),
+                   addLabels = c(TRUE, FALSE, FALSE),
+                   n = 10000,
+                   ...) {
+  if(checkRowName) {
+    commonRows <- base::intersect(rownames(embed), rownames(meta))
+    if (is.null(commonRows) | (length(commonRows) == 0)) {
+      stop("No common rows between embed and meta.")
+    }
+    embed <- embed[commonRows, ]
+    meta <- meta[commonRows, ]
+  }
+  p <- lapply(seq_along(names), function(i) {
+    if (!(names[i] %in% colnames(meta))) {
+      warning(names[i], " is not in meta.Skip it.")
+      return(NULL)
+    }
+    message("Drawing 2D image for ", names[i])
+    rowIndex <- which(!is.na(meta[, names[i]]))
+    if (length(rowIndex) > n) {
+      rowIndex <- sample(x = rowIndex, size = n, replace = FALSE)
+    }
+    r <- ggPoint(
+      x = embed[rowIndex, 1],
+      y = embed[rowIndex, 2],
+      color = meta[rowIndex, names[i]],
+      discrete = discretes[i],
+      title = names[i],
+      labelMeans = addLabels[i],
+      ...
+    )
+    return(r)
+  })
+  return(p)
+}
+
+
 #' Get Seurat dot plot for snap gmat.
 #' @param snap snap object, default is NULL
 #' @param snapList list of snap object, default is NULL
@@ -88,4 +146,115 @@ plotDotplot <- function(snap = NULL,
                      ggplot2::element_text(angle = axis.text.x.angle,
                                            hjust = axis.text.x.hjust))
   return(p)
+}
+
+#' plotFeatureSingle from SnapATAC package
+#' Allow the object can be a matrix of umap/tsne or a snap
+#'
+#' @param snap A snap object or matrix of umap/tsne
+#' @param featureValue Feature enrichment value for each cell.
+#' Value will be normalized betweeen 0 and 1.
+#' @param method Visulization method c("tsne", "umap").
+#' @param pointSize Point size [1].
+#' @param pointShape Point shape type [19].
+#' @param downSample Downsample the original cells to
+#' down.sample cells to ovoid large dataset [10,000].
+#' @param pdfile pdf file name to save the plot [NULL].
+#' @param pdfWidth Width of the graphics region in inches [7].
+#' @param pdfHeight Height of the graphics region in inches [7].
+#' @param quantiles Feature value outside this range will be removed [c(0.01, 0.99)]
+#' @param ... Arguments passed to plot method.
+#' @importFrom grDevices pdf dev.off
+#' @importFrom methods slot
+#' @importFrom scales alpha
+#' @importFrom graphics plot text title legend
+#' @importFrom plot3D scatter2D
+#' @importFrom viridis viridis
+#' @export
+plotFeatureSingle <- function(snap,
+                              featureValue,
+                              method = c("tsne", "umap"),
+                              pointSize = 0.1,
+                              pointShape = 19,
+                              downSample = 10000,
+                              pdfile = NULL,
+                              pdfWidth = 7,
+                              pdfHeight = 7,
+                              quantiles = c(0.01, 0.99),
+                              ...) {
+  if (missing(snap)) {
+    stop("obj is missing")
+  } else {
+    if (!is(snap, "snap")) {
+      stop("obj is not a snap object")
+    }
+    ncell <- nrow(snap)
+  }
+
+
+  method <- match.arg(method)
+  dataUse <- as.data.frame(slot(snap, method))
+
+  if (method == "tsne") {
+    colnames(dataUse) <- c("TSNE-1", "TSNE-2")
+    labNames <- c("TSNE-1", "TSNE-2")
+  } else {
+    colnames(dataUse) <- c("UMAP-1", "UMAP-2")
+    labNames <- c("UMAP-1", "UMAP-2")
+  }
+
+  if ((x <- nrow(dataUse)) == 0L) {
+    stop("visulization method does not exist, run runViz first!")
+  }
+
+  if (nrow(dataUse) != length(featureValue)) {
+    stop("feature.value has different length with number of cells in obj")
+  }
+
+  quantilesLow <- quantile(featureValue, quantiles[1])
+  quantilesHigh <- quantile(featureValue, quantiles[2])
+  featureValue[featureValue > quantilesHigh] <- quantilesHigh
+  featureValue[featureValue < quantilesLow] <- quantilesLow
+
+  if (!is.null(pdfile)) {
+    if (file.exists(pdfile)) {
+      warning("pdf.file already exists")
+      file.remove(pdfile)
+    } else {
+      if (!file.create(pdfile)) {
+        stop("cannot create pdf.file, not a directory")
+      }
+      file.remove(pdfile)
+    }
+    pdf(pdfile, width = pdfWidth, height = pdfHeight)
+  }
+
+  downSample <- min(downSample, ncell)
+  idx <- sort(sample(seq(ncell), downSample))
+  dataUse <- dataUse[idx, , drop = FALSE]
+  featureValue <- featureValue[idx]
+  xlims <- c(-max(abs(dataUse[, 1])) * 1.05, max(abs(dataUse[, 1])) * 1.2)
+  ylims <- c(-max(abs(dataUse[, 2])) * 1.05, max(abs(dataUse[, 2])) * 1.05)
+
+  plot3D::scatter2D(
+    x = dataUse[, 1],
+    y = dataUse[, 2],
+    colvar = featureValue,
+    cex = pointSize,
+    pch = pointShape,
+    bty = "l",
+    font.lab = 2,
+    col.axis = "darkgrey",
+    xlim = xlims,
+    ylim = ylims,
+    xlab = labNames[1],
+    ylab = labNames[2],
+    col = viridis(256, option = "D"),
+    ...
+  )
+  box(bty = "l", lwd = 2)
+
+  if (!is.null(pdfile)) {
+    dev.off()
+  }
 }

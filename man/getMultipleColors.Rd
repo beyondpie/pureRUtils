@@ -4,17 +4,31 @@
 \alias{getMultipleColors}
 \title{Get multiple distinct colors using viridis package.}
 \usage{
-getMultipleColors(types, b = 0.05, e = 0.2, pal = turbo, showColor = FALSE)
+getMultipleColors(
+  types,
+  alpha = 1,
+  b = 0,
+  e = 1,
+  direction = 1,
+  pal = viridis,
+  showColor = FALSE
+)
 }
 \arguments{
 \item{types}{vector/array, which we want to assign each element with a distinct color}
 
-\item{b}{numeric, \link{0,1} color begin value, 0.05 default}
+\item{alpha}{numeric, default is 1}
 
-\item{e}{numeric, \link{0,1} color end value, 0.2 default, no less than b
+\item{b}{numeric, \link{0,1} color begin value, default is 0}
+
+\item{e}{numeric, \link{0,1} color end value, default is 1 , no less than b
 NOTE, both b and e are calculated from the right-side in the color scales.}
 
-\item{pal}{literal, color palette to use, default is turbo (no "" needed)}
+\item{direction}{1 or -1, default is 1
+If 1, colors are ordered from darkest to lightest.
+If -1, the order of colors is reversed.}
+
+\item{pal}{literal, color palette to use, default is viridis (no "" needed)}
 
 \item{showColor}{bool, after generating the color
 if need to show colors with scales::show_col, default FALSE}
