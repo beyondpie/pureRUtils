@@ -196,7 +196,7 @@ plotFeatureSingle.SnapATAC <- function(snap = NULL,
     dataUse <- embedmat
   }
   ncell <- nrow(dataUse)
-  colnames(dataUse) <- paste(method, c(1,2), sep = "-")
+  colnames(dataUse) <- paste(method, c(1, 2), sep = "-")
   labNames <- colnames(dataUse)
   if (nrow(dataUse) != length(featureValue)) {
     stop("feature.value has different length with dataUse.")
@@ -247,4 +247,99 @@ plotFeatureSingle.SnapATAC <- function(snap = NULL,
   if (!is.null(pdfile)) {
     dev.off()
   }
+}
+
+#' plotFeatureSingle
+#' Allow the object can be a matrix of umap/tsne or a snap
+#'
+#' @param snap A snap object, default is NULL
+#' @param featureValue Feature enrichment value for each cell.
+#' Value will be normalized betweeen 0 and 1.
+#' @param embedmat a matrix of umap or tsne, default is NULL
+#' @param method Visulization method c("tsne", "umap").
+#' @param downSample Downsample the original cells to
+#' down.sample cells to ovoid large dataset [10,000].
+#' @param pdfile pdf file name to save the plot [NULL].
+#' @param pdfWidth Width of the graphics region in inches [7].
+#' @param pdfHeight Height of the graphics region in inches [7].
+#' @param quantiles Feature value outside this range will be removed [c(0.01, 0.99)]
+#' @param pal colors for ploting continuous numbers, default viridis::viridis(n=256)
+#' @param colorTitle legend title, default is "gene score"
+#' @param pointSize numeric, default is 0.1
+#' @param labelSize integer default is 5
+#' @param baseSize integer default is 12
+#' @param legendSize integer default is 8
+#' @param ... Arguments passed to ggPoint method
+#' @return ggplot object
+#' @importFrom viridis viridis
+#' @export
+plotFeatureSingle <- function(snap = NULL,
+                              featureValue,
+                              embedmat = NULL,
+                              method = c("tsne", "umap"),
+                              downSample = 10000,
+                              pdfile = NULL,
+                              pdfWidth = 7,
+                              pdfHeight = 7,
+                              quantiles = c(0.01, 0.99),
+                              pal = viridis::viridis(n = 256),
+                              colorTitle = "gene score",
+                              pointSize = 0.1,
+                              labelSize = 5,
+                              baseSize = 12,
+                              legendSize = 8,
+                              ...) {
+  if( (!is.null(snap)) & (!is.null(embedmat))) {
+    stop("Both snap and embedmat are NULL.")
+  }
+  method <- match.arg(method)
+  if (!is.null(snap)) {
+    message("Use snap to get embedmat.")
+    dataUse <- as.data.frame(methods::slot(snap, method))
+  }
+  if (!is.null(embedmat)) {
+    message("Argument embedmat is not NULL, use it.")
+    dataUse <- embedmat
+  }
+  ncell <- nrow(dataUse)
+  colnames(dataUse) <- paste(method, c(1, 2), sep = "-")
+  labNames <- colnames(dataUse)
+  if (nrow(dataUse) != length(featureValue)) {
+    stop("feature.value has different length with dataUse.")
+  }
+
+  quantilesLow <- quantile(featureValue, quantiles[1])
+  quantilesHigh <- quantile(featureValue, quantiles[2])
+  featureValue[featureValue > quantilesHigh] <- quantilesHigh
+  featureValue[featureValue < quantilesLow] <- quantilesLow
+
+  if (!is.null(pdfile)) {
+    prepareOutfile(pdfile)
+    pdf(pdfile, width = pdfWidth, height = pdfHeight)
+  }
+
+  downSample <- min(downSample, ncell)
+  idx <- sort(sample(seq(ncell), downSample))
+  dataUse <- dataUse[idx, , drop = FALSE]
+  featureValue <- featureValue[idx]
+  p <- ggPoint(
+    x = dataUse[, 1],
+    y = dataUse[, 2],
+    color = featureValue,
+    discrete = FALSE,
+    labelMeans = FALSE,
+    pal = pal,
+    colorTitle = colorTitle,
+    size = pointSize,
+    labelSize = labelSize,
+    baseSize = baseSize,
+    legendSize = legendSize,
+    ...
+  )
+  if (!is.null(pdfile)) {
+    prepareOutfile(pdfile)
+    ggplot2::ggsave(filename = pdfile, plot = p,
+                    width = pdfWidth, height = pdfHeight)
+  }
+  return(p)
 }

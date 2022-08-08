@@ -47,48 +47,6 @@ getMultipleColors <- function(types,
   }))
 }
 
-#' Get color palatte function using viridis_pal fun from viridis package.
-#' @description
-#' See details:
-#' https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
-#' @param types vector/array, which we want to assign each element with a distinct color
-#' @param b numeric, [0,1] color begin value, 0.05 default
-#' @param e numeric, [0,1] color end value, 0.2 default, no less than b
-#' NOTE, both b and e are calculated from the right-side in the color scales.
-#' @param direction integer default is 1
-#' @param option color palette to use, default is "D"
-#' NOTE: "magma" (or "A"); "inferno" (or "B");"plasma" (or "C");
-#' "viridis" (or "D") ;"cividis" (or "E");"rocket" (or "F");
-#' "mako" (or "G"); "turbo" (or "H")
-#' @param showColor bool, after generating the color
-#' if need to show colors with scales::show_col, default FALSE
-#' @return color palatte function, f(n) will get n different colors.
-#' @export
-getColorPalFn <- function(types,
-                           b = 0, e = 1,
-                           direction = 1,
-                           option = "D",
-                           showColor = FALSE) {
-  if (length(unique(types)) < length(types)) {
-    warning("types has repeat elements. Only unique elements are considered")
-  }
-  types <- unique(types)
-  if (b > e) {
-    stop("b is larger than e.")
-  }
-  colorfn <- viridis::viridis_pal(
-    n = length(types),
-    begin = b,
-    end = e,
-    option = option,
-    direction = direction)
-  if (showColor) {
-    scales::show_col(colorfn(10))
-  }
-  return(colorfn)
-}
-
-
 #' Get continous color with linear interplotation
 #' @description Use circlize::colorRamp2 to do the linear interplotation
 #' Use wasanderson::was_palette to generate the explict colors needed,

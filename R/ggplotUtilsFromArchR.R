@@ -86,6 +86,9 @@ ggPoint <- function(x = NULL,
                     addFit = NULL,
                     rastr = FALSE,
                     dpi = 300,
+                    legendDirection = "vertical",
+                    legendPosition = "right",
+                    legendFontSize = 5,
                     ...) {
   stopifnot(length(y) == length(x))
   if (length(x) < 5) {
@@ -204,7 +207,8 @@ ggPoint <- function(x = NULL,
       ylab(ylabel) +
       ggtitle(title) +
       theme_ArchR(baseSize = baseSize) +
-      theme(legend.direction = "horizontal", legend.box.background = element_rect(color = NA)) +
+      theme(legend.direction = legendDirection,
+            legend.box.background = element_rect(color = NA)) +
       labs(color = colorTitle)
 
     if (rastr) {
@@ -303,7 +307,10 @@ ggPoint <- function(x = NULL,
         "\nSpearman = ", round(cor(df$x, df$y, method = "spearman"), 3)
       ))
   }
-  p <- p + theme(legend.position = "bottom", legend.key = element_rect(size = 2))
+  p <- p + theme(legend.position = legendPosition,
+                 ## legend.key = element_rect(size = 3),
+                 legend.text = element_text(size = legendFontSize)
+                 )
   if (!is.null(ratioYX)) {
     attr(p, "ratioYX") <- ratioYX
   }

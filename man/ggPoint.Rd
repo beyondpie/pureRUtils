@@ -40,6 +40,9 @@ ggPoint(
   addFit = NULL,
   rastr = FALSE,
   dpi = 300,
+  legendDirection = "vertical",
+  legendPosition = "right",
+  legendFontSize = 5,
   ...
 )
 }
