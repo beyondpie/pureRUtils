@@ -151,9 +151,10 @@ plotDotplot <- function(snap = NULL,
 #' plotFeatureSingle from SnapATAC package
 #' Allow the object can be a matrix of umap/tsne or a snap
 #'
-#' @param snap A snap object or matrix of umap/tsne
+#' @param snap A snap object, default is NULL
 #' @param featureValue Feature enrichment value for each cell.
 #' Value will be normalized betweeen 0 and 1.
+#' @param embedmat a matrix of umap or tsne, default is NULL
 #' @param method Visulization method c("tsne", "umap").
 #' @param pointSize Point size [1].
 #' @param pointShape Point shape type [19].
@@ -165,50 +166,40 @@ plotDotplot <- function(snap = NULL,
 #' @param quantiles Feature value outside this range will be removed [c(0.01, 0.99)]
 #' @param ... Arguments passed to plot method.
 #' @importFrom grDevices pdf dev.off
-#' @importFrom methods slot
 #' @importFrom scales alpha
 #' @importFrom graphics plot text title legend
 #' @importFrom plot3D scatter2D
 #' @importFrom viridis viridis
 #' @export
-plotFeatureSingle <- function(snap,
-                              featureValue,
-                              method = c("tsne", "umap"),
-                              pointSize = 0.1,
-                              pointShape = 19,
-                              downSample = 10000,
-                              pdfile = NULL,
-                              pdfWidth = 7,
-                              pdfHeight = 7,
-                              quantiles = c(0.01, 0.99),
-                              ...) {
-  if (missing(snap)) {
-    stop("obj is missing")
-  } else {
-    if (!is(snap, "snap")) {
-      stop("obj is not a snap object")
-    }
-    ncell <- nrow(snap)
+plotFeatureSingle.SnapATAC <- function(snap = NULL,
+                                       featureValue,
+                                       embedmat = NULL,
+                                       method = c("tsne", "umap"),
+                                       pointSize = 0.1,
+                                       pointShape = 19,
+                                       downSample = 10000,
+                                       pdfile = NULL,
+                                       pdfWidth = 7,
+                                       pdfHeight = 7,
+                                       quantiles = c(0.01, 0.99),
+                                       ...) {
+  if( (!is.null(snap)) & (!is.null(embedmat))) {
+    stop("Both snap and embedmat are NULL.")
   }
-
-
   method <- match.arg(method)
-  dataUse <- as.data.frame(slot(snap, method))
-
-  if (method == "tsne") {
-    colnames(dataUse) <- c("TSNE-1", "TSNE-2")
-    labNames <- c("TSNE-1", "TSNE-2")
-  } else {
-    colnames(dataUse) <- c("UMAP-1", "UMAP-2")
-    labNames <- c("UMAP-1", "UMAP-2")
+  if (!is.null(snap)) {
+    message("Use snap to get embedmat.")
+    dataUse <- as.data.frame(methods::slot(snap, method))
   }
-
-  if ((x <- nrow(dataUse)) == 0L) {
-    stop("visulization method does not exist, run runViz first!")
+  if (!is.null(embedmat)) {
+    message("Argument embedmat is not NULL, use it.")
+    dataUse <- embedmat
   }
-
+  ncell <- nrow(dataUse)
+  colnames(dataUse) <- paste(method, c(1,2), sep = "-")
+  labNames <- colnames(dataUse)
   if (nrow(dataUse) != length(featureValue)) {
-    stop("feature.value has different length with number of cells in obj")
+    stop("feature.value has different length with dataUse.")
   }
 
   quantilesLow <- quantile(featureValue, quantiles[1])
@@ -253,7 +244,6 @@ plotFeatureSingle <- function(snap,
     ...
   )
   box(bty = "l", lwd = 2)
-
   if (!is.null(pdfile)) {
     dev.off()
   }
