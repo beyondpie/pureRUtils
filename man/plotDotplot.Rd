@@ -13,6 +13,11 @@ plotDotplot(
   cellidSep = ".",
   axis.text.x.angle = 30,
   axis.text.x.hjust = 1,
+  scaleSizeMin = 4,
+  scaleSizeMax = 6,
+  scaleColorLow = "blue",
+  scaleColorMid = "white",
+  scaleColorHigh = "red",
   ...
 )
 }
@@ -33,6 +38,16 @@ the cells in snap or snapList have the cluster identification.}
 \item{axis.text.x.angle}{numeric, default is 30}
 
 \item{axis.text.x.hjust}{numeric, default is 1}
+
+\item{scaleSizeMin}{integer, default is 4}
+
+\item{scaleSizeMax}{integer, default is 6}
+
+\item{scaleColorLow}{color name, default is "blue"}
+
+\item{scaleColorMid}{color name, default is "white"}
+
+\item{scaleColorHigh}{color name, default is "red"}
 
 \item{...}{used for Seurat::DotPlot function}
 

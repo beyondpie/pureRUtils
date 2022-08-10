@@ -68,6 +68,11 @@ plot2D <- function(embed,
 #' @param cellidSep characters default is "."
 #' @param axis.text.x.angle numeric, default is 30
 #' @param axis.text.x.hjust numeric, default is 1
+#' @param scaleSizeMin integer, default is 4
+#' @param scaleSizeMax integer, default is 6
+#' @param scaleColorLow color name, default is "blue"
+#' @param scaleColorMid color name, default is "white"
+#' @param scaleColorHigh color name, default is "red"
 #' @param ... used for Seurat::DotPlot function
 #' @return ggplot object
 #' @export
@@ -79,6 +84,11 @@ plotDotplot <- function(snap = NULL,
                         cellidSep = ".",
                         axis.text.x.angle = 30,
                         axis.text.x.hjust = 1,
+                        scaleSizeMin = 4,
+                        scaleSizeMax = 6,
+                        scaleColorLow = "blue",
+                        scaleColorMid = "white",
+                        scaleColorHigh = "red",
                         ...) {
   if (!is.null(snapList)) {
     message("Use snapList instead of a single snap object.")
@@ -90,6 +100,7 @@ plotDotplot <- function(snap = NULL,
   if ((!is.null(cluster)) & (is.null(names(cluster)))) {
     stop("cluster have no names.")
   }
+  
   snapSeurat <- snapGmat2Seurat(
     snap = snap, eigDims = 1:50,
     assay = "GeneScore", pcaPrefix = "SnapATAC_",
@@ -121,7 +132,7 @@ plotDotplot <- function(snap = NULL,
     })
     cluster <- unlist(clist)
   }
-  if (!is.null(cluster)) {
+  if ((!is.null(cluster)) & (is.null(snapSeurat[[groupBy]]))) {
     cellids <- with(
       snapSeurat@meta.data, paste(sample, barcode, sep = "."))
     if (sum(cellids %in% names(cluster)) != length(cellids)) {
@@ -144,7 +155,11 @@ plotDotplot <- function(snap = NULL,
     ) +
     ggplot2::theme(axis.text.x =
                      ggplot2::element_text(angle = axis.text.x.angle,
-                                           hjust = axis.text.x.hjust))
+                                           hjust = axis.text.x.hjust)) +
+    ggplot2::scale_size(range = c(scaleSizeMin, scaleSizeMax)) +
+    ggplot2::scale_colour_gradient2(low = scaleColorLow,
+                                    mid = scaleColorMid,
+                                    high = scaleColorHigh)
   return(p)
 }
 
