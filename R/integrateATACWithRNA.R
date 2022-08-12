@@ -12,6 +12,7 @@
 #' @param rnaTypeColnm characters, colname for rnaSeurat's type, default "ClusterName"
 #' @param reso numeric, clustering resolution parameter, default 0.5
 #' @param reduction characters, method used in FindTransferAnchors,
+#' @param nVariableFeature integer, default is 3000
 #' default "cca".
 #' @return Seurat object, merge snapSeurat and rnaSeurat
 #' Add predictId  and predictMaxScore from rnaSeurat for snapSeurat on metaData,
@@ -29,7 +30,8 @@ integrateWithScRNASeq <- function(snapSeurat,
                                   preprocessRNA = TRUE,
                                   rnaTypeColnm = "ClusterName",
                                   reso = 0.5,
-                                  reduction = "cca") {
+                                  reduction = "cca",
+                                  nVariableFeature = 3000) {
   if (nrow(snapSeurat) < 1) {
     stop("No cells in snapSeurat.")
   }
@@ -46,7 +48,7 @@ integrateWithScRNASeq <- function(snapSeurat,
   }
   if (preprocessRNA) {
     rnaSeurat <- NormalizeData(rnaSeurat)
-    rnaSeurat <- FindVariableFeatures(rnaSeurat)
+    rnaSeurat <- FindVariableFeatures(rnaSeurat, nfeatures = nVariableFeature)
     rnaSeurat <- ScaleData(rnaSeurat, features = rownames(rnaSeurat))
     rnaSeurat <- RunPCA(rnaSeurat, features = VariableFeatures(rnaSeurat))
   }

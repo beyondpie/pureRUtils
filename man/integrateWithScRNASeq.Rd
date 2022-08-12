@@ -13,7 +13,8 @@ integrateWithScRNASeq(
   preprocessRNA = TRUE,
   rnaTypeColnm = "ClusterName",
   reso = 0.5,
-  reduction = "cca"
+  reduction = "cca",
+  nVariableFeature = 3000
 )
 }
 \arguments{
@@ -36,7 +37,9 @@ if NULL (default), use all the dims.}
 
 \item{reso}{numeric, clustering resolution parameter, default 0.5}
 
-\item{reduction}{characters, method used in FindTransferAnchors,
+\item{reduction}{characters, method used in FindTransferAnchors,}
+
+\item{nVariableFeature}{integer, default is 3000
 default "cca".}
 }
 \value{
