@@ -21,6 +21,8 @@ plotFeatureSingle(
   labelSize = 5,
   baseSize = 12,
   legendSize = 8,
+  discrete = FALSE,
+  labelMeans = FALSE,
   ...
 )
 }

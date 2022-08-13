@@ -303,6 +303,8 @@ plotFeatureSingle <- function(snap = NULL,
                               labelSize = 5,
                               baseSize = 12,
                               legendSize = 8,
+                              discrete = FALSE,
+                              labelMeans = FALSE,
                               ...) {
   if( (!is.null(snap)) & (!is.null(embedmat))) {
     stop("Both snap and embedmat are NULL.")
@@ -322,11 +324,12 @@ plotFeatureSingle <- function(snap = NULL,
   if (nrow(dataUse) != length(featureValue)) {
     stop("feature.value has different length with dataUse.")
   }
-
-  quantilesLow <- quantile(featureValue, quantiles[1])
-  quantilesHigh <- quantile(featureValue, quantiles[2])
-  featureValue[featureValue > quantilesHigh] <- quantilesHigh
-  featureValue[featureValue < quantilesLow] <- quantilesLow
+  if (!discrete) {
+    quantilesLow <- quantile(featureValue, quantiles[1])
+    quantilesHigh <- quantile(featureValue, quantiles[2])
+    featureValue[featureValue > quantilesHigh] <- quantilesHigh
+    featureValue[featureValue < quantilesLow] <- quantilesLow
+  }
 
   if (!is.null(pdfile)) {
     prepareOutfile(pdfile)
@@ -341,8 +344,8 @@ plotFeatureSingle <- function(snap = NULL,
     x = dataUse[, 1],
     y = dataUse[, 2],
     color = featureValue,
-    discrete = FALSE,
-    labelMeans = FALSE,
+    discrete = discrete,
+    labelMeans = labelMeans,
     pal = pal,
     colorTitle = colorTitle,
     size = pointSize,
