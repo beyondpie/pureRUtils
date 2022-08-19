@@ -284,6 +284,11 @@ plotFeatureSingle.SnapATAC <- function(snap = NULL,
 #' @param labelSize integer default is 5
 #' @param baseSize integer default is 12
 #' @param legendSize integer default is 8
+#' @param discrete bool is featureValue discrete, default is FALSE
+#' @param labelMeans bool if label the position of means, default is FALSE
+#' This is usually needed when discrete is TRUE
+#' @param quantile.na.rm bool if remove NA values when using quantile function
+#' default is TRUE, this is usually used for continuous feature values.
 #' @param ... Arguments passed to ggPoint method
 #' @return ggplot object
 #' @importFrom viridis viridis
@@ -305,6 +310,7 @@ plotFeatureSingle <- function(snap = NULL,
                               legendSize = 8,
                               discrete = FALSE,
                               labelMeans = FALSE,
+                              quantile.na.rm = TRUE,
                               ...) {
   if( (!is.null(snap)) & (!is.null(embedmat))) {
     stop("Both snap and embedmat are NULL.")
@@ -325,8 +331,10 @@ plotFeatureSingle <- function(snap = NULL,
     stop("feature.value has different length with dataUse.")
   }
   if (!discrete) {
-    quantilesLow <- quantile(featureValue, quantiles[1])
-    quantilesHigh <- quantile(featureValue, quantiles[2])
+    quantilesLow <- quantile(featureValue, quantiles[1],
+                             na.rm = quantile.na.rm)
+    quantilesHigh <- quantile(featureValue, quantiles[2],
+                              na.rm = quantile.na.rm)
     featureValue[featureValue > quantilesHigh] <- quantilesHigh
     featureValue[featureValue < quantilesLow] <- quantilesLow
   }

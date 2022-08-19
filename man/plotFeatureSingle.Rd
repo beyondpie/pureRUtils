@@ -23,6 +23,7 @@ plotFeatureSingle(
   legendSize = 8,
   discrete = FALSE,
   labelMeans = FALSE,
+  quantile.na.rm = TRUE,
   ...
 )
 }
@@ -58,6 +59,14 @@ down.sample cells to ovoid large dataset \link{10,000}.}
 \item{baseSize}{integer default is 12}
 
 \item{legendSize}{integer default is 8}
+
+\item{discrete}{bool is featureValue discrete, default is FALSE}
+
+\item{labelMeans}{bool if label the position of means, default is FALSE
+This is usually needed when discrete is TRUE}
+
+\item{quantile.na.rm}{bool if remove NA values when using quantile function
+default is TRUE, this is usually used for continuous feature values.}
 
 \item{...}{Arguments passed to ggPoint method}
 }
