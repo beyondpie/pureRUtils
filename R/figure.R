@@ -289,6 +289,7 @@ plotFeatureSingle.SnapATAC <- function(snap = NULL,
 #' This is usually needed when discrete is TRUE
 #' @param quantile.na.rm bool if remove NA values when using quantile function
 #' default is TRUE, this is usually used for continuous feature values.
+#' @param showLegend bool default is FALSE
 #' @param ... Arguments passed to ggPoint method
 #' @return ggplot object
 #' @importFrom viridis viridis
@@ -311,6 +312,7 @@ plotFeatureSingle <- function(snap = NULL,
                               discrete = FALSE,
                               labelMeans = FALSE,
                               quantile.na.rm = TRUE,
+                              showLegend = FALSE,
                               ...) {
   if( (!is.null(snap)) & (!is.null(embedmat))) {
     stop("Both snap and embedmat are NULL.")
@@ -362,6 +364,9 @@ plotFeatureSingle <- function(snap = NULL,
     legendSize = legendSize,
     ...
   )
+  if(!showLegend) {
+    p + ggplot2::theme(legend.position = "none")
+  }
   if (!is.null(pdfile)) {
     prepareOutfile(pdfile)
     ggplot2::ggsave(filename = pdfile, plot = p,

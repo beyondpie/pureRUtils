@@ -24,6 +24,7 @@ plotFeatureSingle(
   discrete = FALSE,
   labelMeans = FALSE,
   quantile.na.rm = TRUE,
+  showLegend = FALSE,
   ...
 )
 }
@@ -67,6 +68,8 @@ This is usually needed when discrete is TRUE}
 
 \item{quantile.na.rm}{bool if remove NA values when using quantile function
 default is TRUE, this is usually used for continuous feature values.}
+
+\item{showLegend}{bool default is FALSE}
 
 \item{...}{Arguments passed to ggPoint method}
 }
