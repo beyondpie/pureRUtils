@@ -17,6 +17,7 @@ plotFeatureSingle.SnapATAC(
   pdfWidth = 7,
   pdfHeight = 7,
   quantiles = c(0.01, 0.99),
+  fontLab = 2,
   ...
 )
 }
@@ -46,6 +47,8 @@ down.sample cells to ovoid large dataset \link{10,000}.}
 \item{quantiles}{Feature value outside this range will be removed \link{c(0.01, 0.99)}}
 
 \item{...}{Arguments passed to plot method.}
+
+\item{fontLabl}{integer default is 2}
 }
 \description{
 plotFeatureSingle from SnapATAC package
