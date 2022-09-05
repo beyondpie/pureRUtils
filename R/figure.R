@@ -179,6 +179,7 @@ plotDotplot <- function(snap = NULL,
 #' @param pdfWidth Width of the graphics region in inches [7].
 #' @param pdfHeight Height of the graphics region in inches [7].
 #' @param quantiles Feature value outside this range will be removed [c(0.01, 0.99)]
+#' @param fontLabl integer default is 2
 #' @param ... Arguments passed to plot method.
 #' @importFrom grDevices pdf dev.off
 #' @importFrom scales alpha
@@ -197,6 +198,7 @@ plotFeatureSingle.SnapATAC <- function(snap = NULL,
                                        pdfWidth = 7,
                                        pdfHeight = 7,
                                        quantiles = c(0.01, 0.99),
+                                       fontLab = 2,
                                        ...) {
   if( (!is.null(snap)) & (!is.null(embedmat))) {
     stop("Both snap and embedmat are NULL.")
@@ -249,7 +251,7 @@ plotFeatureSingle.SnapATAC <- function(snap = NULL,
     cex = pointSize,
     pch = pointShape,
     bty = "l",
-    font.lab = 2,
+    font.lab = fontLab,
     col.axis = "darkgrey",
     xlim = xlims,
     ylim = ylims,
