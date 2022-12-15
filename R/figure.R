@@ -367,7 +367,7 @@ plotFeatureSingle <- function(snap = NULL,
     ...
   )
   if(!showLegend) {
-    p + ggplot2::theme(legend.position = "none")
+    p <- p + ggplot2::theme(legend.position = "none")
   }
   if (!is.null(pdfile)) {
     prepareOutfile(pdfile)
